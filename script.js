@@ -1,11 +1,29 @@
 let isAnimating = false
 
-// Restaurar tema salvo
+// Background aleatório para o modo light
+const lightBackgrounds = [
+  "./assets/background1.jpeg",
+  "./assets/background2.jpeg",
+  "./assets/background3.jpeg",
+  "./assets/background4.jpeg",
+]
+
+function setRandomLightBackground() {
+  const bg = lightBackgrounds[Math.floor(Math.random() * lightBackgrounds.length)]
+  document.body.style.backgroundImage = `url('${bg}')`
+}
+
+// Restaurar tema salvo e configurar avatar/background
 const savedTheme = localStorage.getItem("theme")
+const img = document.querySelector("#profile img")
+
 if (savedTheme === "dark") {
   document.documentElement.classList.remove("light")
-  const img = document.querySelector("#profile img")
   if (img) img.setAttribute("src", "./assets/Avatar.png")
+} else {
+  // Light mode (padrão) — avatar correto + background aleatório
+  if (img) img.setAttribute("src", "./assets/avatar-light.png")
+  setRandomLightBackground()
 }
 
 // ========== Transição Ink Splash ==========
@@ -166,6 +184,11 @@ function toggleMode() {
         "src",
         isLight ? "./assets/avatar-light.png" : "./assets/Avatar.png"
       )
+      if (isLight) {
+        setRandomLightBackground()
+      } else {
+        document.body.style.backgroundImage = ""
+      }
     }
 
     if (frame < totalFrames) {
@@ -215,46 +238,32 @@ function resizeCanvas() {
   canvas.height = window.innerHeight
 }
 
-// --- Textura de papel japonês (washi) ---
+// --- Textura de papel japonês (washi) — desabilitada para performance ---
 let paperPattern = null
 
 function createPaperTexture() {
-  const tex = document.createElement("canvas")
-  tex.width = 256
-  tex.height = 256
-  const tctx = tex.getContext("2d")
-  const data = tctx.createImageData(256, 256)
-  for (let i = 0; i < data.data.length; i += 4) {
-    const v = Math.random() * 25
-    data.data[i] = v
-    data.data[i + 1] = v
-    data.data[i + 2] = v
-    data.data[i + 3] = 10
-  }
-  tctx.putImageData(data, 0, 0)
-  paperPattern = ctx.createPattern(tex, "repeat")
+  // Desabilitada: economiza 1 fillRect por frame
 }
 
-// --- Nebulosas carmesim (Japanese Luxury) ---
+// --- Nebulosas roxo/azul/violeta ---
 function createNebulae() {
   nebulae = []
   const colors = [
-    { r: 120, g: 12, b: 12 },
-    { r: 80, g: 8, b: 18 },
-    { r: 100, g: 15, b: 10 },
-    { r: 50, g: 5, b: 20 },
-    { r: 70, g: 10, b: 8 },
+    { r: 60, g: 20, b: 90 },   // deep purple
+    { r: 20, g: 30, b: 80 },   // midnight blue
+    { r: 80, g: 30, b: 100 },  // violet
+    { r: 180, g: 100, b: 70 }, // coral accent
   ]
 
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 3; i++) {
     nebulae.push({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
       radius: 200 + Math.random() * 300,
       color: colors[i % colors.length],
-      opacity: 0.018 + Math.random() * 0.022,
-      driftX: (Math.random() - 0.5) * 0.08,
-      driftY: (Math.random() - 0.5) * 0.05,
+      opacity: 0.012 + Math.random() * 0.016,
+      driftX: (Math.random() - 0.5) * 0.04,
+      driftY: (Math.random() - 0.5) * 0.025,
     })
   }
 }
@@ -293,73 +302,74 @@ function drawNebulae() {
   })
 }
 
-// --- Estrelas (tons quentes: branco, dourado, âmbar) ---
+// --- Estrelas (tons azul-branco frios + 2 acentos quentes) ---
 const starPalette = [
-  { r: 255, g: 255, b: 255 },
-  { r: 255, g: 245, b: 225 },
-  { r: 255, g: 225, b: 180 },
-  { r: 255, g: 210, b: 160 },
-  { r: 240, g: 230, b: 220 },
-  { r: 255, g: 200, b: 150 },
+  { r: 200, g: 220, b: 255 },  // ice blue
+  { r: 180, g: 200, b: 255 },  // soft blue
+  { r: 220, g: 230, b: 255 },  // pale blue-white
+  { r: 255, g: 255, b: 255 },  // white
+  { r: 255, g: 245, b: 230 },  // warm cream (accent)
+  { r: 210, g: 140, b: 100 },  // coral (accent)
 ]
 
 function createStars() {
   stars = []
-  const numStars = Math.floor((canvas.width * canvas.height) / 3500)
+  const numStars = Math.floor((canvas.width * canvas.height) / 8000)
 
   for (let i = 0; i < numStars; i++) {
     const color = starPalette[Math.floor(Math.random() * starPalette.length)]
-    const radius = Math.random() * 1.5 + 0.2
+    const radius = Math.random() * 1.15 + 0.2
     stars.push({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
       radius: radius,
       color: color,
-      opacity: Math.random(),
-      twinkleSpeed: Math.random() * 0.015 + 0.004,
+      opacity: Math.random() * 0.7,
+      maxOpacity: 0.7,
+      twinkleSpeed: Math.random() * 0.008 + 0.002,
       twinkleDirection: Math.random() > 0.5 ? 1 : -1,
-      isHero: radius > 1.3,
+      isHero: radius > 1.1,
     })
   }
 }
 
 function drawCrossGlare(x, y, size, opacity, color) {
-  const len = size * 7
+  const len = size * 5
   const { r, g, b } = color
 
   const hGrad = ctx.createLinearGradient(x - len, y, x + len, y)
   hGrad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0)`)
-  hGrad.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${opacity * 0.3})`)
+  hGrad.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${opacity * 0.2})`)
   hGrad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`)
   ctx.beginPath()
   ctx.moveTo(x - len, y)
   ctx.lineTo(x + len, y)
   ctx.strokeStyle = hGrad
-  ctx.lineWidth = 0.6
+  ctx.lineWidth = 0.5
   ctx.stroke()
 
   const vGrad = ctx.createLinearGradient(x, y - len, x, y + len)
   vGrad.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0)`)
-  vGrad.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${opacity * 0.3})`)
+  vGrad.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${opacity * 0.2})`)
   vGrad.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`)
   ctx.beginPath()
   ctx.moveTo(x, y - len)
   ctx.lineTo(x, y + len)
   ctx.strokeStyle = vGrad
-  ctx.lineWidth = 0.6
+  ctx.lineWidth = 0.5
   ctx.stroke()
 }
 
 function createShootingStar() {
-  if (shootingStars.length < 2 && Math.random() < 0.008) {
+  if (shootingStars.length < 1 && Math.random() < 0.003) {
     shootingStars.push({
       x: Math.random() * canvas.width,
       y: 0,
-      length: Math.random() * 80 + 50,
-      speed: Math.random() * 10 + 8,
+      length: Math.random() * 50 + 30,
+      speed: Math.random() * 6 + 4,
       opacity: 1,
       angle: Math.PI / 4 + (Math.random() * 0.3 - 0.15),
-      width: 0.8 + Math.random() * 1.2,
+      width: 0.5 + Math.random() * 0.7,
     })
   }
 }
@@ -376,19 +386,24 @@ function updateShootingStars() {
 }
 
 function drawDarkMode() {
-  // Camada 0: Textura de papel japonês
-  if (paperPattern) {
-    ctx.fillStyle = paperPattern
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
-  }
+  // Camada 0: Glow central suave (destaca área de conteúdo)
+  const glowGrad = ctx.createRadialGradient(
+    canvas.width / 2, canvas.height * 0.38, 0,
+    canvas.width / 2, canvas.height * 0.38, canvas.height * 0.5
+  )
+  glowGrad.addColorStop(0, "rgba(40, 20, 60, 0.25)")
+  glowGrad.addColorStop(0.5, "rgba(30, 15, 50, 0.1)")
+  glowGrad.addColorStop(1, "rgba(0, 0, 0, 0)")
+  ctx.fillStyle = glowGrad
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-  // Camada 1: Nebulosas carmesim
+  // Camada 1: Nebulosas roxo/azul
   drawNebulae()
 
   // Camada 2: Estrelas
   stars.forEach((star) => {
     star.opacity += star.twinkleSpeed * star.twinkleDirection
-    if (star.opacity >= 1 || star.opacity <= 0.15) {
+    if (star.opacity >= star.maxOpacity || star.opacity <= 0.1) {
       star.twinkleDirection *= -1
     }
 
@@ -401,8 +416,8 @@ function drawDarkMode() {
 
     if (star.radius > 0.7) {
       ctx.beginPath()
-      ctx.arc(star.x, star.y, star.radius * 2.5, 0, Math.PI * 2)
-      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${star.opacity * 0.06})`
+      ctx.arc(star.x, star.y, star.radius * 2.0, 0, Math.PI * 2)
+      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${star.opacity * 0.04})`
       ctx.fill()
     }
 
@@ -411,7 +426,7 @@ function drawDarkMode() {
     }
   })
 
-  // Camada 3: Estrelas cadentes (douradas)
+  // Camada 3: Estrelas cadentes (prata/azul-branco)
   shootingStars.forEach((star) => {
     const tailX = star.x - Math.cos(star.angle) * star.length
     const tailY = star.y - Math.sin(star.angle) * star.length
@@ -420,9 +435,9 @@ function drawDarkMode() {
       star.x, star.y,
       tailX, tailY
     )
-    gradient.addColorStop(0, `rgba(255, 230, 180, ${star.opacity})`)
-    gradient.addColorStop(0.3, `rgba(255, 200, 140, ${star.opacity * 0.5})`)
-    gradient.addColorStop(1, "rgba(200, 150, 80, 0)")
+    gradient.addColorStop(0, `rgba(200, 220, 255, ${star.opacity})`)
+    gradient.addColorStop(0.3, `rgba(180, 200, 240, ${star.opacity * 0.5})`)
+    gradient.addColorStop(1, "rgba(150, 170, 220, 0)")
 
     ctx.beginPath()
     ctx.moveTo(star.x, star.y)
@@ -434,7 +449,7 @@ function drawDarkMode() {
 
     ctx.beginPath()
     ctx.arc(star.x, star.y, star.width, 0, Math.PI * 2)
-    ctx.fillStyle = `rgba(255, 248, 230, ${star.opacity})`
+    ctx.fillStyle = `rgba(220, 230, 255, ${star.opacity})`
     ctx.fill()
   })
 }
@@ -523,7 +538,17 @@ function updateAndDrawLightMode() {
 }
 
 // --- Loop de animação ---
+let frameCount = 0
+
 function animate() {
+  frameCount++
+
+  // Mobile optimization: renderiza a cada 2 frames (~30fps) em telas pequenas
+  if (canvas.width < 768 && frameCount % 2 !== 0) {
+    requestAnimationFrame(animate)
+    return
+  }
+
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
   if (isLightMode()) {

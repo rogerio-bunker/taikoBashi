@@ -6,42 +6,44 @@
 
 :root {
   --text-color: #f0ebe4;
-  --stroke-color: rgba(255, 255, 255, 0.05);
-  --surface-color: rgba(255, 255, 255, 0.03);
+  --stroke-color: rgba(255, 255, 255, 0.07);
+  --surface-color: rgba(255, 255, 255, 0.04);
   --surface-color-hover: rgba(255, 255, 255, 0.07);
   --highlight-color: rgba(255, 255, 255, 0.08);
   --switch-bg-url: url(./assets/moon-stars.svg);
-  --card-blur: 24px;
+  --card-blur: 20px;
   --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
-  --card-shadow-hover: 0 8px 40px rgba(180, 30, 30, 0.18), 0 0 0 1px rgba(200, 50, 50, 0.15);
-  --avatar-glow: none;
-  --social-hover-shadow: 0 0 24px rgba(180, 40, 40, 0.25);
+  --card-shadow-hover: 0 8px 40px rgba(200, 120, 80, 0.15), 0 0 0 1px rgba(200, 120, 80, 0.12);
+  --avatar-glow: 0 0 30px rgba(200, 120, 80, 0.12);
+  --social-hover-shadow: 0 0 24px rgba(200, 120, 80, 0.2);
   --inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .light {
   --text-color: #1a1a2e;
-  --stroke-color: rgba(0, 0, 0, 0.06);
-  --surface-color: rgba(255, 255, 255, 0.5);
-  --surface-color-hover: rgba(255, 255, 255, 0.75);
-  --highlight-color: rgba(0, 0, 0, 0.05);
+  --stroke-color: rgba(255, 255, 255, 0.35);
+  --surface-color: rgba(255, 255, 255, 0.72);
+  --surface-color-hover: rgba(255, 255, 255, 0.88);
+  --highlight-color: rgba(255, 255, 255, 0.4);
   --switch-bg-url: url(./assets/sun.svg);
-  --card-blur: 12px;
-  --card-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-  --card-shadow-hover: 0 8px 28px rgba(0, 0, 0, 0.08);
-  --avatar-glow: 0 4px 24px rgba(0, 0, 0, 0.06);
-  --social-hover-shadow: 0 0 16px rgba(0, 0, 0, 0.06);
-  --inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --card-blur: 24px;
+  --card-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
+  --card-shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.14);
+  --avatar-glow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  --social-hover-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  --inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 body {
-  background: #060606;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 40%, rgba(18, 13, 24, 0.6) 0%, transparent 70%),
+    linear-gradient(180deg, #080808 0%, #120d18 40%, #0b0f1a 70%, #080808 100%);
   min-height: 100vh;
   overflow-x: hidden;
 }
 
 html.light body {
-  background: url(./assets/backgroundwhite.png) no-repeat center center fixed;
+  background: no-repeat center center fixed;
   background-size: cover;
 }
 
@@ -116,6 +118,9 @@ body * {
 /* ========== Profile ========== */
 
 #profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
   padding: 24px;
   position: relative;
@@ -133,9 +138,9 @@ html:not(.light) #profile::before {
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(180, 25, 25, 0.22) 0%,
-    rgba(150, 15, 15, 0.12) 35%,
-    rgba(120, 10, 10, 0.04) 65%,
+    rgba(200, 120, 80, 0.14) 0%,
+    rgba(200, 120, 80, 0.07) 35%,
+    rgba(200, 120, 80, 0.02) 65%,
     transparent 100%
   );
   pointer-events: none;
@@ -221,13 +226,35 @@ ul li a {
 
 ul li a:hover {
   background: var(--surface-color-hover);
-  border-color: rgba(180, 40, 40, 0.2);
+  border-color: rgba(200, 120, 80, 0.2);
   transform: translateY(-3px);
   box-shadow: var(--card-shadow-hover), var(--inset-highlight);
 }
 
 html.light ul li a:hover {
-  border-color: rgba(0, 0, 0, 0.15);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+html.light #profile p {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 4px 16px;
+  border-radius: 20px;
+}
+
+html.light #social-links a {
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+html.light footer {
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 12px;
+  margin-bottom: 16px;
 }
 
 /* ========== Social links ========== */
