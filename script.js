@@ -103,14 +103,14 @@ function toggleMode() {
   for (let i = 0; i < numBlobs; i++) {
     const angle =
       (Math.PI * 2 * i) / numBlobs + (Math.random() - 0.5) * 0.4
-    const speed = 14 + Math.random() * 18
+    const speed = 8 + Math.random() * 10
     blobs.push({
       x: cx,
       y: cy,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
       radius: 25 + Math.random() * 35,
-      growth: 1.06 + Math.random() * 0.04,
+      growth: 1.035 + Math.random() * 0.025,
     })
   }
 
@@ -118,22 +118,22 @@ function toggleMode() {
   const splatters = []
   for (let i = 0; i < 40; i++) {
     const angle = Math.random() * Math.PI * 2
-    const speed = 18 + Math.random() * 30
+    const speed = 10 + Math.random() * 16
     splatters.push({
       x: cx,
       y: cy,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
       radius: 2 + Math.random() * 10,
-      delay: Math.floor(Math.random() * 6),
+      delay: Math.floor(Math.random() * 8),
     })
   }
 
   let centerRadius = 0
   let frame = 0
   let themeChanged = false
-  const coverFrames = 22
-  const totalFrames = 32
+  const coverFrames = 38
+  const totalFrames = 52
   const centerGrowth = (maxDist * 1.15) / coverFrames
 
   function animateInk() {
@@ -150,8 +150,8 @@ function toggleMode() {
       b.x += b.vx
       b.y += b.vy
       b.radius *= b.growth
-      b.vx *= 0.97
-      b.vy *= 0.97
+      b.vx *= 0.985
+      b.vy *= 0.985
 
       ictx.beginPath()
       ictx.arc(b.x, b.y, b.radius, 0, Math.PI * 2)
@@ -163,8 +163,8 @@ function toggleMode() {
       if (frame >= s.delay) {
         s.x += s.vx
         s.y += s.vy
-        s.vx *= 0.93
-        s.vy *= 0.93
+        s.vx *= 0.96
+        s.vy *= 0.96
 
         ictx.beginPath()
         ictx.arc(s.x, s.y, s.radius, 0, Math.PI * 2)
@@ -197,7 +197,7 @@ function toggleMode() {
       // Fade out para revelar o novo tema
       let opacity = 1
       function fadeOut() {
-        opacity -= 0.06
+        opacity -= 0.035
         if (opacity <= 0) {
           inkCanvas.remove()
           isAnimating = false
