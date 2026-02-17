@@ -38,6 +38,9 @@ body {
   background:
     radial-gradient(ellipse 80% 60% at 50% 40%, rgba(18, 13, 24, 0.6) 0%, transparent 70%),
     linear-gradient(180deg, #080808 0%, #120d18 40%, #0b0f1a 70%, #080808 100%);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
   min-height: 100vh;
   overflow-x: hidden;
 }

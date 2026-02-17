@@ -13,6 +13,17 @@ function setRandomLightBackground() {
   document.body.style.backgroundImage = `url('${bg}')`
 }
 
+// Background aleatório para o modo dark
+const darkBackgrounds = [
+  "./assets/darkmode1.png",
+  "./assets/darkmode2.png",
+]
+
+function setRandomDarkBackground() {
+  const bg = darkBackgrounds[Math.floor(Math.random() * darkBackgrounds.length)]
+  document.body.style.backgroundImage = `linear-gradient(rgba(8,8,8,0.55), rgba(8,8,8,0.55)), url('${bg}')`
+}
+
 // Restaurar tema salvo e configurar avatar/background
 const savedTheme = localStorage.getItem("theme")
 const img = document.querySelector("#profile img")
@@ -20,6 +31,7 @@ const img = document.querySelector("#profile img")
 if (savedTheme === "dark") {
   document.documentElement.classList.remove("light")
   if (img) img.setAttribute("src", "./assets/Avatar.png")
+  setRandomDarkBackground()
 } else {
   // Light mode (padrão) — avatar correto + background aleatório
   if (img) img.setAttribute("src", "./assets/avatar-light.png")
@@ -187,7 +199,7 @@ function toggleMode() {
       if (isLight) {
         setRandomLightBackground()
       } else {
-        document.body.style.backgroundImage = ""
+        setRandomDarkBackground()
       }
     }
 
@@ -324,8 +336,8 @@ function createStars() {
       y: Math.random() * canvas.height,
       radius: radius,
       color: color,
-      opacity: Math.random() * 0.7,
-      maxOpacity: 0.7,
+      opacity: Math.random() * 0.85,
+      maxOpacity: 0.85,
       twinkleSpeed: Math.random() * 0.008 + 0.002,
       twinkleDirection: Math.random() > 0.5 ? 1 : -1,
       isHero: radius > 1.1,
@@ -417,7 +429,7 @@ function drawDarkMode() {
     if (star.radius > 0.7) {
       ctx.beginPath()
       ctx.arc(star.x, star.y, star.radius * 2.0, 0, Math.PI * 2)
-      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${star.opacity * 0.04})`
+      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${star.opacity * 0.07})`
       ctx.fill()
     }
 
