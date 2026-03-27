@@ -10,28 +10,26 @@
   --surface-color: rgba(255, 255, 255, 0.04);
   --surface-color-hover: rgba(255, 255, 255, 0.07);
   --highlight-color: rgba(255, 255, 255, 0.08);
-  --switch-bg-url: url(./assets/moon-stars.svg);
   --card-blur: 20px;
   --card-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
-  --card-shadow-hover: 0 8px 40px rgba(200, 120, 80, 0.15), 0 0 0 1px rgba(200, 120, 80, 0.12);
-  --avatar-glow: 0 0 30px rgba(200, 120, 80, 0.12);
-  --social-hover-shadow: 0 0 24px rgba(200, 120, 80, 0.2);
-  --inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --card-shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --avatar-glow: none;
+  --social-hover-shadow: none;
+  --inset-highlight: none;
 }
 
 .light {
   --text-color: #1a1a2e;
-  --stroke-color: rgba(255, 255, 255, 0.35);
-  --surface-color: rgba(255, 255, 255, 0.72);
-  --surface-color-hover: rgba(255, 255, 255, 0.88);
-  --highlight-color: rgba(255, 255, 255, 0.4);
-  --switch-bg-url: url(./assets/sun.svg);
+  --stroke-color: rgba(255, 255, 255, 0.5);
+  --surface-color: rgba(255, 255, 255, 0.82);
+  --surface-color-hover: rgba(255, 255, 255, 0.92);
+  --highlight-color: rgba(255, 255, 255, 0.6);
   --card-blur: 24px;
   --card-shadow: 0 2px 16px rgba(0, 0, 0, 0.08);
   --card-shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.14);
-  --avatar-glow: 0 4px 24px rgba(0, 0, 0, 0.1);
-  --social-hover-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-  --inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  --avatar-glow: none;
+  --social-hover-shadow: none;
+  --inset-highlight: none;
 }
 
 body {
@@ -50,57 +48,14 @@ html.light body {
   background-size: cover;
 }
 
-#stars {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
-  pointer-events: none;
-}
-
-html.light #stars {
-  opacity: 1;
-}
 
 /* ========== Transição Ink Splash ========== */
 
-/* Sparkles de transição */
-.sparkle {
-  position: fixed;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 9999;
-}
-
-@keyframes sparkleOut {
-  0% {
-    transform: translate(0, 0) scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(var(--tx), var(--ty)) scale(0);
-    opacity: 0;
-  }
-}
-
-/* Container pulse na transição */
-#container.transitioning {
-  animation: containerPulse 0.6s ease-out;
-}
-
-@keyframes containerPulse {
-  0% { transform: scale(1); }
-  30% { transform: scale(0.97); }
-  100% { transform: scale(1); }
-}
 
 /* ========== Transição suave para elementos ========== */
 body,
 #container,
 ul li a,
-#switch span,
 #social-links a {
   transition: background 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
@@ -129,32 +84,16 @@ body * {
   position: relative;
 }
 
-/* Lua vermelha atrás do avatar (dark mode) */
-html:not(.light) #profile::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -55%);
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    rgba(200, 120, 80, 0.14) 0%,
-    rgba(200, 120, 80, 0.07) 35%,
-    rgba(200, 120, 80, 0.02) 65%,
-    transparent 100%
-  );
-  pointer-events: none;
-  z-index: 0;
-}
 
 #profile img {
-  width: 112px;
+  width: 136px;
   border-radius: 50%;
   box-shadow: var(--avatar-glow);
-  transition: box-shadow 0.5s ease;
+  transition: box-shadow 0.5s ease, background 0.3s ease;
+}
+
+html.light #profile img {
+  background: white;
 }
 
 #profile p {
@@ -165,41 +104,38 @@ html:not(.light) #profile::before {
 
 /* ========== Switch ========== */
 #switch {
-  position: relative;
-  width: 64px;
+  display: flex;
   margin: 4px auto;
   cursor: pointer;
-}
-
-#switch button {
-  width: 32px;
-  height: 32px;
-  background: white var(--switch-bg-url) no-repeat center;
-  border: 0;
-  border-radius: 50%;
-  position: absolute;
-  top: 50%;
-  left: 0;
-  z-index: 1;
-  transform: translateY(-50%);
-  transition: left 0.3s ease, right 0.3s ease;
-  cursor: pointer;
-}
-
-.light #switch button {
-  right: 0;
-  left: initial;
-}
-
-#switch span {
-  display: block;
-  width: 64px;
-  height: 24px;
   background: var(--surface-color);
   border: 1px solid var(--stroke-color);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  border-radius: 9999px;
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+  width: fit-content;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.switch-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  font-size: 20px;
+  transition: background 0.3s ease;
+}
+
+/* Light mode: sol ativo */
+.light .switch-sun {
+  background: white;
+}
+
+/* Dark mode: lua ativa */
+html:not(.light) .switch-moon {
+  background: rgba(255, 255, 255, 0.15);
 }
 
 /* ========== Links ========== */
@@ -229,7 +165,7 @@ ul li a {
 
 ul li a:hover {
   background: var(--surface-color-hover);
-  border-color: rgba(200, 120, 80, 0.2);
+  border-color: var(--stroke-color);
   transform: translateY(-3px);
   box-shadow: var(--card-shadow-hover), var(--inset-highlight);
 }
@@ -239,7 +175,7 @@ html.light ul li a:hover {
 }
 
 html.light #profile p {
-  background: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   padding: 4px 16px;
@@ -247,13 +183,13 @@ html.light #profile p {
 }
 
 html.light #social-links a {
-  background: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 
 html.light footer {
-  background: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-radius: 12px;

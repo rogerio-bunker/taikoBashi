@@ -12,6 +12,7 @@
       href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,500&display=swap"
       rel="stylesheet"
     />
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Taiko Bashi Sushi - Restaurante japonês em Porto Alegre. Peça pelo WhatsApp ou iFood!" />
@@ -23,16 +24,19 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <canvas id="stars"></canvas>
     <div id="container">
       <div id="profile">
-        <img src="./assets/Avatar.png" alt="Logo do Taiko Bashi Sushi" />
+        <img src="./assets/favicon.svg" alt="Logo do Taiko Bashi Sushi" />
         <p>@taikobashi.sushi</p>
       </div>
 
       <div id="switch" onclick="toggleMode()" role="button" aria-label="Alternar tema claro/escuro" tabindex="0">
-        <button aria-hidden="true"></button>
-        <span aria-hidden="true"></span>
+        <div class="switch-option switch-sun">
+          <ion-icon name="sunny-outline"></ion-icon>
+        </div>
+        <div class="switch-option switch-moon">
+          <ion-icon name="moon-outline"></ion-icon>
+        </div>
       </div>
       <ul>
         <li>
@@ -41,8 +45,8 @@
           </a>
         </li>
         <li>
-          <a href="https://taikobashi.saipos.com/home" target="_blank"
-            >Ver nosso cardápio
+          <a href="https://taikobashi.com.br/" target="_blank"
+            >Faça seu pedido no Site
           </a>
         </li>
         <li>
@@ -64,7 +68,7 @@
         <a href="https://www.instagram.com/taikobashi.sushi" target="_blank" aria-label="Instagram">
           <ion-icon name="logo-instagram"></ion-icon>
         </a>
-        <a href="https://taikobashi.saipos.com/home" target="_blank" aria-label="Cardápio">
+        <a href="https://taikobashi.com.br/" target="_blank" aria-label="Cardápio">
           <ion-icon name="reader-outline"></ion-icon>
         </a>
         <a
