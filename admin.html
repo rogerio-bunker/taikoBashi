@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Painel Taiko Bashi</title>
+    <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="admin.css" />
+  </head>
+  <body>
+    <!-- ===== Login ===== -->
+    <section id="login" class="login" hidden>
+      <form id="login-form" class="card login-card">
+        <img src="./assets/favicon.svg" alt="" class="logo" />
+        <h1>Painel do site</h1>
+        <p class="muted">Entre para alterar cores e imagens de fundo.</p>
+        <label class="field">
+          <span>E-mail</span>
+          <input type="email" id="email" autocomplete="username" required />
+        </label>
+        <label class="field">
+          <span>Senha</span>
+          <input type="password" id="password" autocomplete="current-password" required />
+        </label>
+        <p id="login-error" class="error" role="alert" hidden></p>
+        <button type="submit" class="btn primary" id="login-btn">Entrar</button>
+      </form>
+    </section>
+
+    <!-- ===== Editor ===== -->
+    <section id="app" hidden>
+      <header class="topbar">
+        <div class="brand">
+          <img src="./assets/favicon.svg" alt="" />
+          <span>Painel Taiko Bashi</span>
+        </div>
+        <div class="topbar-actions">
+          <a href="./" target="_blank" class="btn ghost small">Ver site</a>
+          <button id="logout" class="btn ghost small">Sair</button>
+        </div>
+      </header>
+
+      <main class="layout">
+        <div class="panel">
+          <div class="tabs" role="tablist">
+            <button role="tab" data-mode="light" aria-selected="true">☀️ Modo claro</button>
+            <button role="tab" data-mode="dark" aria-selected="false">🌙 Modo escuro</button>
+          </div>
+
+          <div class="card">
+            <h2>Imagem de fundo</h2>
+            <p class="muted small">Se tiver mais de uma, o site sorteia uma a cada visita.</p>
+            <div id="bg-list" class="bg-list"></div>
+            <label class="btn secondary upload">
+              <input type="file" id="bg-upload" accept="image/jpeg,image/png,image/webp" hidden />
+              <span id="upload-label">+ Adicionar imagem</span>
+            </label>
+            <label class="field">
+              <span>Escurecer a imagem <output id="overlay-out"></output></span>
+              <input type="range" min="0" max="90" step="1" data-key="overlay" />
+            </label>
+          </div>
+
+          <div class="card">
+            <h2>Botões</h2>
+            <div class="field">
+              <span>Cor de fundo dos botões</span>
+              <div class="color-row">
+                <input type="color" data-key="buttonBg" aria-label="Cor de fundo dos botões" />
+                <input type="text" data-hex="buttonBg" maxlength="7" spellcheck="false" />
+              </div>
+            </div>
+            <label class="field">
+              <span>Opacidade do fundo <output id="opacity-out"></output></span>
+              <input type="range" min="0" max="100" step="1" data-key="buttonBgOpacity" />
+            </label>
+            <div class="field">
+              <span>Cor do texto dos botões</span>
+              <div class="color-row">
+                <input type="color" data-key="buttonText" aria-label="Cor do texto dos botões" />
+                <input type="text" data-hex="buttonText" maxlength="7" spellcheck="false" />
+              </div>
+            </div>
+            <p id="contrast" class="hint"></p>
+          </div>
+
+          <div class="card">
+            <h2>Textos</h2>
+            <div class="field">
+              <span>Cor dos textos (nome, ícones e rodapé)</span>
+              <div class="color-row">
+                <input type="color" data-key="text" aria-label="Cor dos textos" />
+                <input type="text" data-hex="text" maxlength="7" spellcheck="false" />
+              </div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button id="reset" class="btn ghost">Restaurar padrão deste modo</button>
+            <button id="save" class="btn primary" disabled>Salvar alterações</button>
+          </div>
+        </div>
+
+        <div class="preview">
+          <p class="muted small">Prévia (as mudanças só vão pro ar ao salvar)</p>
+          <div class="phone">
+            <iframe id="preview" src="./index.html?preview=1" title="Prévia do site"></iframe>
+          </div>
+        </div>
+      </main>
+    </section>
+
+    <div id="toast" role="status" aria-live="polite"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
+    <script src="./config.js"></script>
+    <script src="./theme.js"></script>
+    <script src="./admin.js"></script>
+  </body>
+</html>
