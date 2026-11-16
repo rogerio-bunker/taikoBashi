@@ -4,6 +4,7 @@
   const DEFAULT_THEME = {
     light: {
       backgrounds: ["./assets/novafoto.jpg"],
+      library: [],
       overlay: 0,
       text: "#1a1a2e",
       buttonBg: "#ffffff",
@@ -12,6 +13,7 @@
     },
     dark: {
       backgrounds: ["./assets/darkmode1.png", "./assets/darkmode2.png"],
+      library: [],
       overlay: 55,
       text: "#f0ebe4",
       buttonBg: "#ffffff",
@@ -44,6 +46,10 @@
         : []
       out[mode] = {
         backgrounds: backgrounds.length ? backgrounds : [...def.backgrounds],
+        // Fotos enviadas pela admin (marcadas ou não), para poder reescolher depois
+        library: Array.isArray(src.library)
+          ? [...new Set(src.library.filter((u) => typeof u === "string" && u))]
+          : [],
         overlay: src.overlay == null ? def.overlay : clamp(src.overlay, 0, 90),
         text: isHex(src.text) ? src.text : def.text,
         buttonBg: isHex(src.buttonBg) ? src.buttonBg : def.buttonBg,
