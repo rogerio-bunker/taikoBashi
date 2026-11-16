@@ -106,19 +106,70 @@
     renderContrast()
   }
 
+  const DEFAULT_BGS = [
+    ...new Set([...ThemeKit.DEFAULT_THEME.light.backgrounds, ...ThemeKit.DEFAULT_THEME.dark.backgrounds]),
+  ]
+
+  // Todas as fotos disponíveis: padrões (dos dois modos) + enviadas + as já marcadas
+  function gallery() {
+    const t = theme[mode]
+    return [...new Set([...DEFAULT_BGS, ...t.library, ...t.backgrounds])]
+  }
+
+  function toggleBackground(url) {
+    const t = theme[mode]
+    const i = t.backgrounds.indexOf(url)
+    if (i >= 0) {
+      if (t.backgrounds.length === 1) return toast("Deixe pelo menos uma foto marcada.", true)
+      // Foto enviada antes da galeria existir: guarda na galeria para não sumir ao desmarcar
+      if (!DEFAULT_BGS.includes(url) && !t.library.includes(url)) t.library.push(url)
+      t.backgrounds.splice(i, 1)
+    } else {
+      t.backgrounds = gallery().filter((u) => u === url || t.backgrounds.includes(u))
+    }
+    renderBackgrounds()
+    changed()
+  }
+
+  function removeFromLibrary(url) {
+    const t = theme[mode]
+    if (t.backgrounds.length === 1 && t.backgrounds[0] === url)
+      return toast("Marque outra foto antes de excluir esta.", true)
+    if (!confirm("Excluir esta foto da galeria?")) return
+    t.library = t.library.filter((u) => u !== url)
+    t.backgrounds = t.backgrounds.filter((u) => u !== url)
+    renderBackgrounds()
+    changed()
+  }
+
   function renderBackgrounds() {
     const list = $("#bg-list")
     list.innerHTML = ""
-    const isDefault =
-      JSON.stringify(theme[mode].backgrounds) === JSON.stringify(ThemeKit.DEFAULT_THEME[mode].backgrounds)
-    theme[mode].backgrounds.forEach((url, i) => {
+    const t = theme[mode]
+    gallery().forEach((url, i) => {
+      const selected = t.backgrounds.includes(url)
+      const isDefault = DEFAULT_BGS.includes(url)
       const item = document.createElement("div")
-      item.className = "bg-item"
+      item.className = "bg-item" + (selected ? " selected" : "")
+
+      const pick = document.createElement("button")
+      pick.type = "button"
+      pick.className = "pick"
+      pick.setAttribute("role", "checkbox")
+      pick.setAttribute("aria-checked", String(selected))
+      pick.setAttribute("aria-label", `Foto ${i + 1}${isDefault ? " (padrão)" : ""}`)
+      pick.addEventListener("click", () => toggleBackground(url))
       const img = document.createElement("img")
       img.src = url
-      img.alt = `Fundo ${i + 1}`
+      img.alt = ""
       img.loading = "lazy"
-      item.appendChild(img)
+      pick.appendChild(img)
+      const check = document.createElement("span")
+      check.className = "check"
+      check.textContent = "✓"
+      pick.appendChild(check)
+      item.appendChild(pick)
+
       if (isDefault) {
         const tag = document.createElement("span")
         tag.className = "tag"
@@ -127,15 +178,11 @@
       } else {
         const del = document.createElement("button")
         del.type = "button"
+        del.className = "del"
         del.textContent = "×"
-        del.setAttribute("aria-label", `Remover fundo ${i + 1}`)
-        del.addEventListener("click", () => {
-          theme[mode].backgrounds.splice(i, 1)
-          // Lista vazia volta para as imagens padrão
-          theme = ThemeKit.merge(theme)
-          changed()
-          renderBackgrounds()
-        })
+        del.title = "Excluir da galeria"
+        del.setAttribute("aria-label", `Excluir foto ${i + 1} da galeria`)
+        del.addEventListener("click", () => removeFromLibrary(url))
         item.appendChild(del)
       }
       list.appendChild(item)
@@ -197,7 +244,9 @@
   )
 
   $("#reset").addEventListener("click", () => {
+    const library = theme[mode].library
     theme[mode] = JSON.parse(JSON.stringify(ThemeKit.DEFAULT_THEME[mode]))
+    theme[mode].library = library
     render()
     changed()
     toast("Padrão restaurado. Clique em Salvar para aplicar no site.")
@@ -239,12 +288,11 @@
       })
       if (error) throw new Error("Falha no envio: " + error.message)
       const { data } = sb.storage.from(BUCKET).getPublicUrl(path)
-      const isDefault =
-        JSON.stringify(theme[mode].backgrounds) === JSON.stringify(ThemeKit.DEFAULT_THEME[mode].backgrounds)
-      theme[mode].backgrounds = isDefault ? [data.publicUrl] : [...theme[mode].backgrounds, data.publicUrl]
+      theme[mode].library.push(data.publicUrl)
+      theme[mode].backgrounds.push(data.publicUrl)
       renderBackgrounds()
       changed()
-      toast("Imagem adicionada. Clique em Salvar para aplicar no site.")
+      toast("Imagem adicionada e marcada. Desmarque as que não quiser e clique em Salvar.")
     } catch (err) {
       toast(err.message, true)
     } finally {
