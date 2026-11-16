@@ -1,33 +1,42 @@
 let isAnimating = false
 
-// Background aleatório para o modo light
-function setLightBackground() {
-  document.body.style.backgroundImage = `url('./assets/novafoto.jpg')`
+const html = document.documentElement
+const isPreview = new URLSearchParams(location.search).has("preview")
+
+// Tema: começa pelo cache (abre rápido) e depois atualiza com o Supabase
+let currentTheme = ThemeKit.loadCache()
+
+function currentMode() {
+  return html.classList.contains("light") ? "light" : "dark"
 }
 
-// Background aleatório para o modo dark
-const darkBackgrounds = [
-  "./assets/darkmode1.png",
-  "./assets/darkmode2.png",
-]
+// Restaurar modo salvo
+let savedMode = null
+try {
+  savedMode = localStorage.getItem("theme")
+} catch {}
+if (savedMode === "dark") html.classList.remove("light")
 
-function setRandomDarkBackground() {
-  const bg = darkBackgrounds[Math.floor(Math.random() * darkBackgrounds.length)]
-  document.body.style.backgroundImage = `linear-gradient(rgba(8,8,8,0.55), rgba(8,8,8,0.55)), url('${bg}')`
-}
+ThemeKit.apply(currentTheme, currentMode())
 
-// Restaurar tema salvo e configurar avatar/background
-const savedTheme = localStorage.getItem("theme")
-const img = document.querySelector("#profile img")
-
-if (savedTheme === "dark") {
-  document.documentElement.classList.remove("light")
-  if (img) img.setAttribute("src", "./assets/favicon.svg")
-  setRandomDarkBackground()
+if (isPreview) {
+  // Prévia dentro do painel admin: recebe o tema via postMessage
+  window.addEventListener("message", (e) => {
+    if (e.origin !== location.origin) return
+    const d = e.data
+    if (!d || d.type !== "theme-preview") return
+    currentTheme = d.theme
+    html.classList.toggle("light", d.mode === "light")
+    ThemeKit.apply(currentTheme, d.mode)
+  })
 } else {
-  // Light mode (padrão) — avatar correto + background aleatório
-  if (img) img.setAttribute("src", "./assets/favicon.svg")
-  setLightBackground()
+  ThemeKit.fetchRemote().then((remote) => {
+    if (!remote) return
+    const changed = JSON.stringify(remote) !== JSON.stringify(currentTheme)
+    currentTheme = remote
+    ThemeKit.saveCache(remote)
+    if (changed) ThemeKit.apply(currentTheme, currentMode())
+  })
 }
 
 // ========== Transição Crossfade ==========
@@ -36,7 +45,6 @@ function toggleMode() {
   if (isAnimating) return
   isAnimating = true
 
-  const html = document.documentElement
   const goingToLight = !html.classList.contains("light")
 
   // Overlay de fade
@@ -54,14 +62,13 @@ function toggleMode() {
   // No meio do fade, trocar o tema
   setTimeout(() => {
     html.classList.toggle("light")
-    const isLight = html.classList.contains("light")
-    localStorage.setItem("theme", isLight ? "light" : "dark")
-
-    if (isLight) {
-      setLightBackground()
-    } else {
-      setRandomDarkBackground()
+    const mode = currentMode()
+    if (!isPreview) {
+      try {
+        localStorage.setItem("theme", mode)
+      } catch {}
     }
+    ThemeKit.apply(currentTheme, mode)
 
     // Fade out do overlay
     setTimeout(() => {
@@ -81,4 +88,3 @@ document.getElementById("switch").addEventListener("keydown", (e) => {
     toggleMode()
   }
 })
-
