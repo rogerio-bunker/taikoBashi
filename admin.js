@@ -606,11 +606,24 @@
     const ctx = canvas.getContext("2d")
     ctx.imageSmoothingQuality = "high"
     ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+    const encode = (type, q) =>
+      new Promise((resolve, reject) =>
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("blob"))), type, q)
+      )
+    // PNG/WEBP podem ter fundo transparente: reduz em WEBP (mantém a transparência).
+    // JPG não tem transparência e deixaria o fundo preto.
+    if (file.type === "image/png" || file.type === "image/webp") {
+      for (const q of [0.95, 0.9, 0.85, 0.8]) {
+        const blob = await encode("image/webp", q)
+        if (blob.type !== "image/webp") break // navegador sem WEBP (Safari antigo)
+        if (blob.size <= MAX_BYTES) return { blob, type: "image/webp" }
+      }
+      const png = await encode("image/png")
+      if (png.size <= MAX_BYTES) return { blob: png, type: "image/png" }
+    }
     let blob
     for (const q of [0.92, 0.88, 0.84, 0.8, 0.75]) {
-      blob = await new Promise((resolve, reject) =>
-        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("blob"))), "image/jpeg", q)
-      )
+      blob = await encode("image/jpeg", q)
       if (blob.size <= MAX_BYTES) break
     }
     return { blob, type: "image/jpeg" }
