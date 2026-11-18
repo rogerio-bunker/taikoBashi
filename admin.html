@@ -58,6 +58,7 @@
             <h2>Imagem de fundo</h2>
             <p class="muted small">Toque nas fotos para escolher quais aparecem no site (✓ = aparece). Se tiver mais de uma marcada, o site sorteia uma a cada visita.</p>
             <div id="bg-list" class="bg-list"></div>
+            <p class="muted small">Para ficar nítido, envie a foto <strong>original</strong> da câmera ou da galeria (de preferência com 2000 pixels ou mais). Fotos baixadas do WhatsApp, do Instagram ou de stories vêm comprimidas e ficam borradas. Fotos marcadas com ⚠️ são pequenas demais.</p>
             <label class="btn secondary upload">
               <input type="file" id="bg-upload" accept="image/jpeg,image/png,image/webp" hidden />
               <span id="upload-label">+ Adicionar imagem</span>
@@ -82,6 +83,10 @@
             <label class="field">
               <span>Nome abaixo do logo</span>
               <input type="text" id="handle-text" maxlength="60" placeholder="@taikobashi.sushi" />
+            </label>
+            <label class="field">
+              <span>Posição do botão claro/escuro</span>
+              <select id="switch-pos"></select>
             </label>
           </div>
 

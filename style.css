@@ -325,6 +325,24 @@ html.hide-logo #profile p {
   margin-top: 0;
 }
 
+/* Botão claro/escuro no canto da tela */
+html.switch-corner #switch {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  margin: 0;
+  z-index: 5;
+}
+html.switch-corner.switch-left #switch {
+  right: auto;
+  left: 16px;
+}
+/* Abaixo dos botões/ícones: um respiro em relação ao que vem depois */
+#container > ul + #switch,
+#social-links + #switch {
+  margin-bottom: 24px;
+}
+
 /* Primeira visita sem cache: esconde os textos padrão até chegar o conteúdo do painel */
 html.content-pending #profile p,
 html.content-pending #container > ul,

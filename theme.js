@@ -60,6 +60,15 @@
     "star-outline": "Avaliações",
   }
 
+  // Onde fica o botão claro/escuro
+  const SWITCH_POS = {
+    top: "Abaixo do nome (padrão)",
+    afterLinks: "Abaixo dos botões",
+    afterSocial: "Abaixo dos ícones",
+    cornerRight: "Canto superior direito",
+    cornerLeft: "Canto superior esquerdo",
+  }
+
   // Tamanhos em px: [padrão, mínimo, máximo]
   const SIZES = {
     width: [420, 300, 640],
@@ -146,6 +155,7 @@
     out.layout = {
       showLogo: lay.showLogo !== false,
       showHandle: lay.showHandle !== false,
+      switchPos: SWITCH_POS[lay.switchPos] ? lay.switchPos : "top",
     }
     // Textos e links (valem para os dois modos)
     const con = (theme && theme.content) || {}
@@ -271,6 +281,18 @@
     }
   }
 
+  // Move o botão claro/escuro só se precisar (mover reinicia a animação de entrada)
+  function placeSwitch(pos) {
+    const sw = document.getElementById("switch")
+    if (!sw) return
+    const anchorId = { afterLinks: "#container > ul", afterSocial: "#social-links" }[pos] || "#profile"
+    const anchor = document.querySelector(anchorId)
+    if (anchor && anchor.nextElementSibling !== sw) anchor.after(sw)
+    const cl = document.documentElement.classList
+    cl.toggle("switch-corner", pos === "cornerRight" || pos === "cornerLeft")
+    cl.toggle("switch-left", pos === "cornerLeft")
+  }
+
   // forcedBg: usado pela prévia do painel para mostrar a foto em ajuste
   function apply(theme, mode, forcedBg) {
     const full = merge(theme)
@@ -281,6 +303,7 @@
     const s = document.documentElement.style
     for (const [k, v] of Object.entries(full.sizes)) s.setProperty(`--size-${k}`, v + "px")
     renderContent(full.content)
+    placeSwitch(full.layout.switchPos)
     const op = t.buttonBgOpacity
 
     s.setProperty("--text-color", t.text)
@@ -347,6 +370,7 @@
     DEFAULT_SIZES,
     SIZES,
     SOCIAL_ICONS,
+    SWITCH_POS,
     cleanUrl,
     merge,
     getFit,

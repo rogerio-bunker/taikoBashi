@@ -111,6 +111,7 @@
     renderContrast()
     renderFit()
     $$("[data-layout]").forEach((el) => (el.checked = theme.layout[el.dataset.layout]))
+    $("#switch-pos").value = theme.layout.switchPos
     renderContentEditor()
     renderSizes()
   }
@@ -224,6 +225,18 @@
     })
     if (!c.social.length) social.innerHTML = '<p class="muted small">Nenhum ícone.</p>'
   }
+
+  const switchSel = $("#switch-pos")
+  for (const [value, label] of Object.entries(ThemeKit.SWITCH_POS)) {
+    const o = document.createElement("option")
+    o.value = value
+    o.textContent = label
+    switchSel.appendChild(o)
+  }
+  switchSel.addEventListener("change", () => {
+    theme.layout.switchPos = switchSel.value
+    changed()
+  })
 
   $("#handle-text").addEventListener("input", (e) => {
     theme.content.handle = e.target.value
@@ -426,9 +439,20 @@
       pick.setAttribute("aria-label", `Foto ${i + 1}${isDefault ? " (padrão)" : ""}`)
       pick.addEventListener("click", () => toggleBackground(url))
       const img = document.createElement("img")
-      img.src = url
       img.alt = ""
       img.loading = "lazy"
+      // Foto pequena: avisa que vai ficar borrada
+      img.addEventListener("load", () => {
+        const side = Math.max(img.naturalWidth, img.naturalHeight)
+        if (side >= MIN_GOOD_SIDE) return
+        item.classList.add("lowres")
+        const warn = document.createElement("span")
+        warn.className = "lowres-tag"
+        warn.textContent = "⚠️"
+        warn.title = `Foto pequena (${img.naturalWidth}×${img.naturalHeight}): pode ficar borrada`
+        item.appendChild(warn)
+      })
+      img.src = url
       pick.appendChild(img)
       const check = document.createElement("span")
       check.className = "check"
@@ -549,12 +573,23 @@
   // ---------- Upload de imagem ----------
   const MAX_BYTES = 4.8 * 1024 * 1024 // limite do bucket é 5 MB
   const MAX_SIDE = 4096
+  const MIN_GOOD_SIDE = 2000 // abaixo disso a foto estica e borra na tela
   const EXT = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" }
 
   // Mantém a foto original sempre que possível; só reduz se passar dos limites
   async function prepareImage(file) {
     const bitmap = await createImageBitmap(file)
     const side = Math.max(bitmap.width, bitmap.height)
+    if (
+      side < MIN_GOOD_SIDE &&
+      !confirm(
+        `Esta foto é pequena (${bitmap.width}×${bitmap.height} pixels) e vai ficar borrada no site.\n\n` +
+          "Ela provavelmente veio do WhatsApp, do Instagram ou de um print. Para ficar nítida, envie a foto original da câmera/galeria.\n\n" +
+          "Enviar mesmo assim?"
+      )
+    ) {
+      return null
+    }
     if (EXT[file.type] && file.size <= MAX_BYTES && side <= MAX_SIDE) {
       return { blob: file, type: file.type }
     }
@@ -588,6 +623,7 @@
       } catch {
         throw new Error("Formato de imagem não suportado. Use JPG, PNG ou WEBP.")
       }
+      if (!img) return // desistiu do envio da foto pequena
       if (img.blob.size > 5 * 1024 * 1024) throw new Error("Imagem muito grande (máx. 5 MB).")
       const path = `${mode}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${EXT[img.type]}`
       const { error } = await sb.storage.from(BUCKET).upload(path, img.blob, {
