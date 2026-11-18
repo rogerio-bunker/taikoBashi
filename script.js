@@ -27,7 +27,7 @@ if (isPreview) {
     if (!d || d.type !== "theme-preview") return
     currentTheme = d.theme
     html.classList.toggle("light", d.mode === "light")
-    ThemeKit.apply(currentTheme, d.mode)
+    ThemeKit.apply(currentTheme, d.mode, d.bg)
   })
 } else {
   ThemeKit.fetchRemote().then((remote) => {

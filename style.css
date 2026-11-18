@@ -261,3 +261,56 @@ ul li:nth-child(4) { animation: fadeInUp 0.5s ease-out 0.5s both; }
 footer {
   animation: fadeInUp 0.5s ease-out 0.7s both;
 }
+
+/* ========== Fundo (camada fixa) ========== */
+#site-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100lvh;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+#site-bg::before,
+#site-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+/* Foto com zoom/posição (celular por padrão) */
+#site-bg::before {
+  background-image: var(--bg-img);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: var(--bg-x-m, 50%) var(--bg-y-m, 50%);
+  transform: scale(var(--bg-z-m, 1));
+  transform-origin: var(--bg-x-m, 50%) var(--bg-y-m, 50%);
+}
+/* Escurecimento por cima da foto */
+#site-bg::after {
+  background: rgba(8, 8, 8, var(--bg-ov, 0));
+}
+@media (min-width: 769px) {
+  #site-bg::before {
+    background-position: var(--bg-x-d, 50%) var(--bg-y-d, 50%);
+    transform: scale(var(--bg-z-d, 1));
+    transform-origin: var(--bg-x-d, 50%) var(--bg-y-d, 50%);
+  }
+}
+#container {
+  position: relative;
+  z-index: 1;
+}
+
+/* ========== Logo e @ ocultáveis pelo painel ========== */
+html.hide-logo #profile img,
+html.hide-handle #profile p,
+html.hide-logo.hide-handle #profile {
+  display: none;
+}
+html.hide-logo #profile p {
+  margin-top: 0;
+}
