@@ -337,6 +337,9 @@ html.switch-corner.switch-left #switch {
   right: auto;
   left: 16px;
 }
+html.switch-hidden #switch {
+  display: none;
+}
 /* Abaixo dos botões/ícones: um respiro em relação ao que vem depois */
 #container > ul + #switch,
 #social-links + #switch {

@@ -235,6 +235,12 @@
   }
   switchSel.addEventListener("change", () => {
     theme.layout.switchPos = switchSel.value
+    // Desativado: mostra na prévia o modo que vai ficar fixo no site
+    const forced = ThemeKit.forcedMode(theme)
+    if (forced && forced !== mode) {
+      mode = forced
+      render()
+    }
     changed()
   })
 

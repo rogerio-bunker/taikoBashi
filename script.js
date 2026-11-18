@@ -17,6 +17,14 @@ try {
 } catch {}
 if (savedMode === "dark") html.classList.remove("light")
 
+// Botão claro/escuro desativado no painel: o site fica no modo escolhido por ela
+// (não salva no localStorage, para a preferência do visitante voltar se ela reativar)
+function syncForcedMode() {
+  const f = ThemeKit.forcedMode(currentTheme)
+  if (f) html.classList.toggle("light", f === "light")
+}
+if (!isPreview) syncForcedMode()
+
 ThemeKit.apply(currentTheme, currentMode())
 
 if (isPreview) {
@@ -40,7 +48,9 @@ if (isPreview) {
     const changed = JSON.stringify(remote) !== JSON.stringify(currentTheme)
     currentTheme = remote
     ThemeKit.saveCache(remote)
-    if (changed) ThemeKit.apply(currentTheme, currentMode())
+    const before = currentMode()
+    syncForcedMode()
+    if (changed || currentMode() !== before) ThemeKit.apply(currentTheme, currentMode())
     reveal()
   })
 }

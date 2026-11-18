@@ -67,6 +67,14 @@
     afterSocial: "Abaixo dos ícones",
     cornerRight: "Canto superior direito",
     cornerLeft: "Canto superior esquerdo",
+    hiddenLight: "Desativado: site sempre no modo claro",
+    hiddenDark: "Desativado: site sempre no modo escuro",
+  }
+
+  // Modo fixo quando o botão claro/escuro está desativado (null = visitante escolhe)
+  function forcedMode(theme) {
+    const p = merge(theme).layout.switchPos
+    return p === "hiddenLight" ? "light" : p === "hiddenDark" ? "dark" : null
   }
 
   // Tamanhos em px: [padrão, mínimo, máximo]
@@ -291,6 +299,7 @@
     const cl = document.documentElement.classList
     cl.toggle("switch-corner", pos === "cornerRight" || pos === "cornerLeft")
     cl.toggle("switch-left", pos === "cornerLeft")
+    cl.toggle("switch-hidden", pos === "hiddenLight" || pos === "hiddenDark")
   }
 
   // forcedBg: usado pela prévia do painel para mostrar a foto em ajuste
@@ -371,6 +380,7 @@
     SIZES,
     SOCIAL_ICONS,
     SWITCH_POS,
+    forcedMode,
     cleanUrl,
     merge,
     getFit,
