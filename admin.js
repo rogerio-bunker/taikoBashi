@@ -21,6 +21,8 @@
 
   let theme = ThemeKit.merge(null)
   let mode = "light"
+  let device = "mobile"
+  let editBg = null // foto em ajuste no card "Enquadramento"
   let dirty = false
 
   // ---------- Utilidades ----------
@@ -46,7 +48,10 @@
 
   function sendPreview() {
     if (!iframe.contentWindow) return
-    iframe.contentWindow.postMessage({ type: "theme-preview", theme, mode }, location.origin)
+    iframe.contentWindow.postMessage(
+      { type: "theme-preview", theme, mode, bg: currentEditBg() },
+      location.origin
+    )
   }
 
   // ---------- Auth ----------
@@ -104,7 +109,80 @@
     $("#opacity-out").textContent = t.buttonBgOpacity + "%"
     renderBackgrounds()
     renderContrast()
+    renderFit()
+    $$("[data-layout]").forEach((el) => (el.checked = theme.layout[el.dataset.layout]))
   }
+
+  // ---------- Enquadramento ----------
+  function currentEditBg() {
+    const list = theme[mode].backgrounds
+    if (!list.includes(editBg)) editBg = list[0]
+    return editBg
+  }
+
+  function renderFit() {
+    const t = theme[mode]
+    const url = currentEditBg()
+    const list = $("#fit-list")
+    list.innerHTML = ""
+    t.backgrounds.forEach((u, i) => {
+      const b = document.createElement("button")
+      b.type = "button"
+      b.setAttribute("role", "radio")
+      b.setAttribute("aria-checked", String(u === url))
+      b.setAttribute("aria-label", `Ajustar foto ${i + 1}`)
+      const img = document.createElement("img")
+      img.src = u
+      img.alt = ""
+      img.loading = "lazy"
+      b.appendChild(img)
+      b.addEventListener("click", () => {
+        editBg = u
+        renderFit()
+        sendPreview()
+      })
+      list.appendChild(b)
+    })
+    list.hidden = t.backgrounds.length < 2
+    const f = ThemeKit.getFit(t, url)[device]
+    $$("[data-fit]").forEach((el) => (el.value = f[el.dataset.fit]))
+    $("#zoom-out").textContent = f.zoom + "%"
+    $("#x-out").textContent = f.x + "%"
+    $("#y-out").textContent = f.y + "%"
+  }
+
+  function setFit(key, value) {
+    const t = theme[mode]
+    const url = currentEditBg()
+    const fit = ThemeKit.getFit(t, url)
+    fit[device][key] = value
+    t.fit = t.fit || {}
+    t.fit[url] = fit
+  }
+
+  function setDevice(d) {
+    device = d
+    $$("[data-device]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.device === d)))
+    const frame = $("#frame")
+    frame.classList.toggle("phone", d === "mobile")
+    frame.classList.toggle("desktop", d === "desktop")
+    layoutFrame()
+    renderFit()
+  }
+
+  // Na prévia de computador, o site é renderizado a 1280x800 e reduzido para caber
+  function layoutFrame() {
+    const frame = $("#frame")
+    if (device !== "desktop") {
+      iframe.style.transform = ""
+      frame.style.height = ""
+      return
+    }
+    const scale = frame.clientWidth / 1280
+    iframe.style.transform = `scale(${scale})`
+    frame.style.height = 800 * scale + 16 + "px"
+  }
+  window.addEventListener("resize", layoutFrame)
 
   const DEFAULT_BGS = [
     ...new Set([...ThemeKit.DEFAULT_THEME.light.backgrounds, ...ThemeKit.DEFAULT_THEME.dark.backgrounds]),
@@ -128,6 +206,7 @@
       t.backgrounds = gallery().filter((u) => u === url || t.backgrounds.includes(u))
     }
     renderBackgrounds()
+    renderFit()
     changed()
   }
 
@@ -138,7 +217,9 @@
     if (!confirm("Excluir esta foto da galeria?")) return
     t.library = t.library.filter((u) => u !== url)
     t.backgrounds = t.backgrounds.filter((u) => u !== url)
+    if (t.fit) delete t.fit[url]
     renderBackgrounds()
+    renderFit()
     changed()
   }
 
@@ -243,10 +324,36 @@
     })
   )
 
+  $$("[data-layout]").forEach((el) =>
+    el.addEventListener("change", () => {
+      theme.layout[el.dataset.layout] = el.checked
+      changed()
+    })
+  )
+
+  $$("[data-device]").forEach((b) => b.addEventListener("click", () => setDevice(b.dataset.device)))
+
+  $$("[data-fit]").forEach((el) =>
+    el.addEventListener("input", () => {
+      setFit(el.dataset.fit, Number(el.value))
+      renderFit()
+      changed()
+    })
+  )
+
+  $("#fit-reset").addEventListener("click", () => {
+    setFit("x", 50)
+    setFit("y", 50)
+    setFit("zoom", 100)
+    renderFit()
+    changed()
+  })
+
   $("#reset").addEventListener("click", () => {
-    const library = theme[mode].library
+    const { library, fit } = theme[mode]
     theme[mode] = JSON.parse(JSON.stringify(ThemeKit.DEFAULT_THEME[mode]))
     theme[mode].library = library
+    theme[mode].fit = fit
     render()
     changed()
     toast("Padrão restaurado. Clique em Salvar para aplicar no site.")
@@ -255,17 +362,32 @@
   iframe.addEventListener("load", sendPreview)
 
   // ---------- Upload de imagem ----------
-  async function compressImage(file) {
+  const MAX_BYTES = 4.8 * 1024 * 1024 // limite do bucket é 5 MB
+  const MAX_SIDE = 4096
+  const EXT = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" }
+
+  // Mantém a foto original sempre que possível; só reduz se passar dos limites
+  async function prepareImage(file) {
     const bitmap = await createImageBitmap(file)
-    const max = 1920
-    const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height))
+    const side = Math.max(bitmap.width, bitmap.height)
+    if (EXT[file.type] && file.size <= MAX_BYTES && side <= MAX_SIDE) {
+      return { blob: file, type: file.type }
+    }
+    const scale = Math.min(1, 3840 / side)
     const canvas = document.createElement("canvas")
     canvas.width = Math.round(bitmap.width * scale)
     canvas.height = Math.round(bitmap.height * scale)
-    canvas.getContext("2d").drawImage(bitmap, 0, 0, canvas.width, canvas.height)
-    return new Promise((resolve, reject) =>
-      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("blob"))), "image/jpeg", 0.82)
-    )
+    const ctx = canvas.getContext("2d")
+    ctx.imageSmoothingQuality = "high"
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+    let blob
+    for (const q of [0.92, 0.88, 0.84, 0.8, 0.75]) {
+      blob = await new Promise((resolve, reject) =>
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("blob"))), "image/jpeg", q)
+      )
+      if (blob.size <= MAX_BYTES) break
+    }
+    return { blob, type: "image/jpeg" }
   }
 
   $("#bg-upload").addEventListener("change", async (e) => {
@@ -275,22 +397,25 @@
     const label = $("#upload-label")
     label.textContent = "Enviando…"
     try {
-      let blob
+      let img
       try {
-        blob = await compressImage(file)
+        img = await prepareImage(file)
       } catch {
         throw new Error("Formato de imagem não suportado. Use JPG, PNG ou WEBP.")
       }
-      const path = `${mode}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`
-      const { error } = await sb.storage.from(BUCKET).upload(path, blob, {
-        contentType: "image/jpeg",
+      if (img.blob.size > 5 * 1024 * 1024) throw new Error("Imagem muito grande (máx. 5 MB).")
+      const path = `${mode}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${EXT[img.type]}`
+      const { error } = await sb.storage.from(BUCKET).upload(path, img.blob, {
+        contentType: img.type,
         cacheControl: "31536000",
       })
       if (error) throw new Error("Falha no envio: " + error.message)
       const { data } = sb.storage.from(BUCKET).getPublicUrl(path)
       theme[mode].library.push(data.publicUrl)
       theme[mode].backgrounds.push(data.publicUrl)
+      editBg = data.publicUrl
       renderBackgrounds()
+      renderFit()
       changed()
       toast("Imagem adicionada e marcada. Desmarque as que não quiser e clique em Salvar.")
     } catch (err) {

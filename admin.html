@@ -69,6 +69,42 @@
           </div>
 
           <div class="card">
+            <h2>Topo do site</h2>
+            <p class="muted small">Vale para os dois modos.</p>
+            <label class="check-row">
+              <input type="checkbox" data-layout="showLogo" />
+              <span>Mostrar logo</span>
+            </label>
+            <label class="check-row">
+              <input type="checkbox" data-layout="showHandle" />
+              <span>Mostrar @taikobashi.sushi</span>
+            </label>
+          </div>
+
+          <div class="card">
+            <h2>Enquadramento</h2>
+            <p class="muted small">Ajuste o zoom e a posição de cada foto. Celular e computador têm ajustes separados.</p>
+            <div class="seg" role="tablist" aria-label="Dispositivo">
+              <button type="button" role="tab" data-device="mobile" aria-selected="true">📱 Celular</button>
+              <button type="button" role="tab" data-device="desktop" aria-selected="false">🖥️ Computador</button>
+            </div>
+            <div id="fit-list" class="fit-list" role="radiogroup" aria-label="Foto a ajustar"></div>
+            <label class="field">
+              <span>Zoom <output id="zoom-out"></output></span>
+              <input type="range" min="100" max="250" step="1" data-fit="zoom" />
+            </label>
+            <label class="field">
+              <span>Posição horizontal <output id="x-out"></output></span>
+              <input type="range" min="0" max="100" step="1" data-fit="x" />
+            </label>
+            <label class="field">
+              <span>Posição vertical <output id="y-out"></output></span>
+              <input type="range" min="0" max="100" step="1" data-fit="y" />
+            </label>
+            <button type="button" id="fit-reset" class="btn ghost small">Centralizar esta foto</button>
+          </div>
+
+          <div class="card">
             <h2>Botões</h2>
             <div class="field">
               <span>Cor de fundo dos botões</span>
@@ -110,7 +146,11 @@
 
         <div class="preview">
           <p class="muted small">Prévia (as mudanças só vão pro ar ao salvar)</p>
-          <div class="phone">
+          <div class="seg" role="tablist" aria-label="Prévia">
+            <button type="button" role="tab" data-device="mobile" aria-selected="true">📱 Celular</button>
+            <button type="button" role="tab" data-device="desktop" aria-selected="false">🖥️ Computador</button>
+          </div>
+          <div class="frame phone" id="frame">
             <iframe id="preview" src="./index.html?preview=1" title="Prévia do site"></iframe>
           </div>
         </div>

@@ -31,6 +31,21 @@
     return Math.min(max, Math.max(min, v))
   }
 
+  // Enquadramento de uma foto (celular e computador), com padrão centralizado
+  function cleanFit(f) {
+    f = f || {}
+    return {
+      x: f.x == null ? 50 : clamp(f.x, 0, 100),
+      y: f.y == null ? 50 : clamp(f.y, 0, 100),
+      zoom: f.zoom == null ? 100 : clamp(f.zoom, 100, 250),
+    }
+  }
+
+  function getFit(modeTheme, url) {
+    const f = (modeTheme.fit && modeTheme.fit[url]) || {}
+    return { mobile: cleanFit(f.mobile), desktop: cleanFit(f.desktop) }
+  }
+
   function isHex(v) {
     return typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v)
   }
@@ -56,7 +71,17 @@
         buttonBgOpacity:
           src.buttonBgOpacity == null ? def.buttonBgOpacity : clamp(src.buttonBgOpacity, 0, 100),
         buttonText: isHex(src.buttonText) ? src.buttonText : def.buttonText,
+        fit: {},
       }
+      if (src.fit && typeof src.fit === "object") {
+        for (const url of Object.keys(src.fit)) out[mode].fit[url] = getFit(src, url)
+      }
+    }
+    // Elementos do topo (valem para os dois modos)
+    const lay = (theme && theme.layout) || {}
+    out.layout = {
+      showLogo: lay.showLogo !== false,
+      showHandle: lay.showHandle !== false,
     }
     return out
   }
@@ -88,8 +113,26 @@
     return `url("${String(u).replace(/["\\\n\r]/g, (c) => encodeURIComponent(c))}")`
   }
 
-  function apply(theme, mode) {
-    const t = merge(theme)[mode]
+  // Camada fixa do fundo (no lugar de background-attachment: fixed,
+  // que no celular estica a foto para a altura da página e a deixa borrada)
+  function bgLayer() {
+    let el = document.getElementById("site-bg")
+    if (!el) {
+      el = document.createElement("div")
+      el.id = "site-bg"
+      el.setAttribute("aria-hidden", "true")
+      document.body.prepend(el)
+    }
+    return el
+  }
+
+  // forcedBg: usado pela prévia do painel para mostrar a foto em ajuste
+  function apply(theme, mode, forcedBg) {
+    const full = merge(theme)
+    const t = full[mode]
+    const cl = document.documentElement.classList
+    cl.toggle("hide-logo", !full.layout.showLogo)
+    cl.toggle("hide-handle", !full.layout.showHandle)
     const s = document.documentElement.style
     const op = t.buttonBgOpacity
 
@@ -103,16 +146,23 @@
       luminance(t.text) > 0.4 ? "rgba(20, 20, 30, 0.72)" : "rgba(255, 255, 255, 0.82)"
     )
 
-    let bg = lastBg[mode]
-    if (!t.backgrounds.includes(bg)) {
-      bg = t.backgrounds[Math.floor(Math.random() * t.backgrounds.length)]
-      lastBg[mode] = bg
+    let bg = forcedBg
+    if (!bg) {
+      bg = lastBg[mode]
+      if (!t.backgrounds.includes(bg)) {
+        bg = t.backgrounds[Math.floor(Math.random() * t.backgrounds.length)]
+        lastBg[mode] = bg
+      }
     }
-    const ov = t.overlay / 100
-    document.body.style.backgroundImage =
-      ov > 0
-        ? `linear-gradient(rgba(8,8,8,${ov}), rgba(8,8,8,${ov})), ${cssUrl(bg)}`
-        : cssUrl(bg)
+    const fit = getFit(t, bg)
+    const ls = bgLayer().style
+    ls.setProperty("--bg-img", cssUrl(bg))
+    ls.setProperty("--bg-ov", String(t.overlay / 100))
+    for (const [dev, k] of [["mobile", "m"], ["desktop", "d"]]) {
+      ls.setProperty(`--bg-x-${k}`, fit[dev].x + "%")
+      ls.setProperty(`--bg-y-${k}`, fit[dev].y + "%")
+      ls.setProperty(`--bg-z-${k}`, String(fit[dev].zoom / 100))
+    }
   }
 
   async function fetchRemote() {
@@ -147,6 +197,7 @@
   window.ThemeKit = {
     DEFAULT_THEME,
     merge,
+    getFit,
     apply,
     fetchRemote,
     loadCache,
