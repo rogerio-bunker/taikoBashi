@@ -70,7 +70,7 @@ body * {
 
 #container {
   width: 100%;
-  max-width: 420px;
+  max-width: var(--size-width, 420px);
   margin: 56px auto 0px;
   padding: 0 24px;
 }
@@ -88,7 +88,8 @@ body * {
 
 
 #profile img {
-  width: 136px;
+  width: var(--size-logo, 136px);
+  max-width: 100%;
   border-radius: 50%;
   box-shadow: var(--avatar-glow);
   transition: box-shadow 0.5s ease, background 0.3s ease;
@@ -100,8 +101,10 @@ html.light #profile img {
 
 #profile p {
   font-weight: 500;
-  line-height: 24px;
+  font-size: var(--size-handle, 16px);
+  line-height: 1.5;
   margin-top: 8px;
+  overflow-wrap: anywhere;
 }
 
 /* ========== Switch ========== */
@@ -145,7 +148,7 @@ ul {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--size-buttonGap, 16px);
   padding: 24px 0;
 }
 
@@ -153,10 +156,13 @@ ul li a {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 16px 24px;
+  text-align: center;
+  overflow-wrap: anywhere;
+  padding: var(--size-buttonPad, 16px) 24px;
+  font-size: var(--size-buttonFont, 16px);
   background: var(--surface-color);
   border: 1px solid var(--stroke-color);
-  border-radius: 8px;
+  border-radius: var(--size-buttonRadius, 8px);
   backdrop-filter: blur(var(--card-blur));
   -webkit-backdrop-filter: blur(var(--card-blur));
   text-decoration: none;
@@ -204,8 +210,9 @@ html.light footer {
 #social-links {
   display: flex;
   justify-content: center;
+  flex-wrap: wrap;
   padding: 24px 0;
-  font-size: 24px;
+  font-size: var(--size-icons, 24px);
 }
 
 #social-links a {
@@ -249,6 +256,7 @@ footer {
   animation: fadeInUp 0.6s ease-out 0.1s both;
 }
 
+ul li { animation: fadeInUp 0.5s ease-out 0.2s both; }
 ul li:nth-child(1) { animation: fadeInUp 0.5s ease-out 0.2s both; }
 ul li:nth-child(2) { animation: fadeInUp 0.5s ease-out 0.3s both; }
 ul li:nth-child(3) { animation: fadeInUp 0.5s ease-out 0.4s both; }
@@ -308,9 +316,39 @@ footer {
 /* ========== Logo e @ ocultáveis pelo painel ========== */
 html.hide-logo #profile img,
 html.hide-handle #profile p,
-html.hide-logo.hide-handle #profile {
+html.empty-handle #profile p,
+html.hide-logo.hide-handle #profile,
+html.hide-logo.empty-handle #profile {
   display: none;
 }
 html.hide-logo #profile p {
   margin-top: 0;
+}
+
+/* Botão claro/escuro no canto da tela */
+html.switch-corner #switch {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  margin: 0;
+  z-index: 5;
+}
+html.switch-corner.switch-left #switch {
+  right: auto;
+  left: 16px;
+}
+html.switch-hidden #switch {
+  display: none;
+}
+/* Abaixo dos botões/ícones: um respiro em relação ao que vem depois */
+#container > ul + #switch,
+#social-links + #switch {
+  margin-bottom: 24px;
+}
+
+/* Primeira visita sem cache: esconde os textos padrão até chegar o conteúdo do painel */
+html.content-pending #profile p,
+html.content-pending #container > ul,
+html.content-pending #social-links {
+  visibility: hidden;
 }

@@ -111,7 +111,211 @@
     renderContrast()
     renderFit()
     $$("[data-layout]").forEach((el) => (el.checked = theme.layout[el.dataset.layout]))
+    $("#switch-pos").value = theme.layout.switchPos
+    renderContentEditor()
+    renderSizes()
   }
+
+  // ---------- Textos, botões e ícones (valem para os dois modos) ----------
+  function moveItem(arr, i, dir) {
+    const j = i + dir
+    if (j < 0 || j >= arr.length) return
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+    renderContentEditor()
+    changed()
+  }
+
+  function removeItem(arr, i, what) {
+    if (!confirm(`Remover este ${what}?`)) return
+    arr.splice(i, 1)
+    renderContentEditor()
+    changed()
+  }
+
+  function smallBtn(label, title, onClick, disabled) {
+    const b = document.createElement("button")
+    b.type = "button"
+    b.className = "icon-btn"
+    b.textContent = label
+    b.title = title
+    b.setAttribute("aria-label", title)
+    b.disabled = !!disabled
+    b.addEventListener("click", onClick)
+    return b
+  }
+
+  function textInput(value, placeholder, maxLength, onInput) {
+    const inp = document.createElement("input")
+    inp.type = "text"
+    inp.value = value
+    inp.placeholder = placeholder
+    inp.maxLength = maxLength
+    inp.addEventListener("input", () => {
+      onInput(inp.value)
+      changed()
+    })
+    return inp
+  }
+
+  function urlInput(item) {
+    const inp = textInput(item.url, "Link (ex.: https://...)", 2000, (v) => (item.url = v))
+    inp.type = "url"
+    inp.spellcheck = false
+    const check = () => {
+      const bad = item.url.trim() && !ThemeKit.cleanUrl(item.url)
+      inp.classList.toggle("invalid", !!bad)
+      inp.title = bad ? "Link inválido: comece com https://, mailto: ou tel:" : ""
+    }
+    inp.addEventListener("input", check)
+    check()
+    return inp
+  }
+
+  function rowControls(arr, i, what) {
+    const box = document.createElement("div")
+    box.className = "row-controls"
+    box.append(
+      smallBtn("↑", "Mover para cima", () => moveItem(arr, i, -1), i === 0),
+      smallBtn("↓", "Mover para baixo", () => moveItem(arr, i, 1), i === arr.length - 1),
+      smallBtn("×", `Remover ${what}`, () => removeItem(arr, i, what))
+    )
+    return box
+  }
+
+  function renderContentEditor() {
+    const c = theme.content
+    $("#handle-text").value = c.handle
+
+    const links = $("#links-list")
+    links.innerHTML = ""
+    c.links.forEach((l, i) => {
+      const row = document.createElement("div")
+      row.className = "edit-row"
+      const fields = document.createElement("div")
+      fields.className = "edit-fields"
+      fields.append(textInput(l.text, "Texto do botão", 80, (v) => (l.text = v)), urlInput(l))
+      row.append(fields, rowControls(c.links, i, "botão"))
+      links.appendChild(row)
+    })
+    if (!c.links.length) links.innerHTML = '<p class="muted small">Nenhum botão.</p>'
+
+    const social = $("#social-list")
+    social.innerHTML = ""
+    c.social.forEach((s, i) => {
+      const row = document.createElement("div")
+      row.className = "edit-row"
+      const fields = document.createElement("div")
+      fields.className = "edit-fields"
+      const sel = document.createElement("select")
+      sel.setAttribute("aria-label", "Ícone")
+      for (const [name, label] of Object.entries(ThemeKit.SOCIAL_ICONS)) {
+        const o = document.createElement("option")
+        o.value = name
+        o.textContent = label
+        sel.appendChild(o)
+      }
+      sel.value = s.icon
+      sel.addEventListener("change", () => {
+        s.icon = sel.value
+        changed()
+      })
+      fields.append(sel, urlInput(s))
+      row.append(fields, rowControls(c.social, i, "ícone"))
+      social.appendChild(row)
+    })
+    if (!c.social.length) social.innerHTML = '<p class="muted small">Nenhum ícone.</p>'
+  }
+
+  const switchSel = $("#switch-pos")
+  for (const [value, label] of Object.entries(ThemeKit.SWITCH_POS)) {
+    const o = document.createElement("option")
+    o.value = value
+    o.textContent = label
+    switchSel.appendChild(o)
+  }
+  switchSel.addEventListener("change", () => {
+    theme.layout.switchPos = switchSel.value
+    // Desativado: mostra na prévia o modo que vai ficar fixo no site
+    const forced = ThemeKit.forcedMode(theme)
+    if (forced && forced !== mode) {
+      mode = forced
+      render()
+    }
+    changed()
+  })
+
+  $("#handle-text").addEventListener("input", (e) => {
+    theme.content.handle = e.target.value
+    changed()
+  })
+
+  $("#link-add").addEventListener("click", () => {
+    theme.content.links.push({ text: "Novo botão", url: "" })
+    renderContentEditor()
+    changed()
+    const rows = $$("#links-list .edit-row input")
+    if (rows.length) rows[rows.length - 2].select()
+  })
+
+  $("#social-add").addEventListener("click", () => {
+    theme.content.social.push({ icon: "globe-outline", url: "" })
+    renderContentEditor()
+    changed()
+  })
+
+  $("#content-reset").addEventListener("click", () => {
+    if (!confirm("Voltar o nome, os botões e os ícones para os originais?")) return
+    theme.content = JSON.parse(JSON.stringify(ThemeKit.DEFAULT_CONTENT))
+    renderContentEditor()
+    changed()
+  })
+
+  // ---------- Tamanhos ----------
+  const SIZE_LABELS = {
+    width: "Largura da área dos botões",
+    buttonPad: "Altura dos botões",
+    buttonFont: "Tamanho da letra dos botões",
+    buttonRadius: "Arredondamento dos cantos",
+    buttonGap: "Espaço entre os botões",
+    logo: "Tamanho do logo",
+    handle: "Tamanho do nome abaixo do logo",
+    icons: "Tamanho dos ícones",
+  }
+
+  const sizesBox = $("#sizes")
+  for (const [key, [, min, max]] of Object.entries(ThemeKit.SIZES)) {
+    const label = document.createElement("label")
+    label.className = "field"
+    const span = document.createElement("span")
+    span.textContent = SIZE_LABELS[key] + " "
+    const out = document.createElement("output")
+    out.dataset.sizeOut = key
+    span.appendChild(out)
+    const range = document.createElement("input")
+    range.type = "range"
+    range.min = min
+    range.max = max
+    range.step = 1
+    range.dataset.size = key
+    range.addEventListener("input", () => {
+      theme.sizes[key] = Number(range.value)
+      out.textContent = range.value + "px"
+      changed()
+    })
+    label.append(span, range)
+    sizesBox.appendChild(label)
+  }
+
+  function renderSizes() {
+    $$("[data-size]").forEach((el) => (el.value = theme.sizes[el.dataset.size]))
+    $$("[data-size-out]").forEach((el) => (el.textContent = theme.sizes[el.dataset.sizeOut] + "px"))
+  }
+
+  $("#sizes-reset").addEventListener("click", () => {
+    theme.sizes = { ...ThemeKit.DEFAULT_SIZES }
+    renderSizes()
+    changed()
+  })
 
   // ---------- Enquadramento ----------
   function currentEditBg() {
@@ -241,9 +445,20 @@
       pick.setAttribute("aria-label", `Foto ${i + 1}${isDefault ? " (padrão)" : ""}`)
       pick.addEventListener("click", () => toggleBackground(url))
       const img = document.createElement("img")
-      img.src = url
       img.alt = ""
       img.loading = "lazy"
+      // Foto pequena: avisa que vai ficar borrada
+      img.addEventListener("load", () => {
+        const side = Math.max(img.naturalWidth, img.naturalHeight)
+        if (side >= MIN_GOOD_SIDE) return
+        item.classList.add("lowres")
+        const warn = document.createElement("span")
+        warn.className = "lowres-tag"
+        warn.textContent = "⚠️"
+        warn.title = `Foto pequena (${img.naturalWidth}×${img.naturalHeight}): pode ficar borrada`
+        item.appendChild(warn)
+      })
+      img.src = url
       pick.appendChild(img)
       const check = document.createElement("span")
       check.className = "check"
@@ -364,12 +579,23 @@
   // ---------- Upload de imagem ----------
   const MAX_BYTES = 4.8 * 1024 * 1024 // limite do bucket é 5 MB
   const MAX_SIDE = 4096
+  const MIN_GOOD_SIDE = 2000 // abaixo disso a foto estica e borra na tela
   const EXT = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" }
 
   // Mantém a foto original sempre que possível; só reduz se passar dos limites
   async function prepareImage(file) {
     const bitmap = await createImageBitmap(file)
     const side = Math.max(bitmap.width, bitmap.height)
+    if (
+      side < MIN_GOOD_SIDE &&
+      !confirm(
+        `Esta foto é pequena (${bitmap.width}×${bitmap.height} pixels) e vai ficar borrada no site.\n\n` +
+          "Ela provavelmente veio do WhatsApp, do Instagram ou de um print. Para ficar nítida, envie a foto original da câmera/galeria.\n\n" +
+          "Enviar mesmo assim?"
+      )
+    ) {
+      return null
+    }
     if (EXT[file.type] && file.size <= MAX_BYTES && side <= MAX_SIDE) {
       return { blob: file, type: file.type }
     }
@@ -380,11 +606,24 @@
     const ctx = canvas.getContext("2d")
     ctx.imageSmoothingQuality = "high"
     ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+    const encode = (type, q) =>
+      new Promise((resolve, reject) =>
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("blob"))), type, q)
+      )
+    // PNG/WEBP podem ter fundo transparente: reduz em WEBP (mantém a transparência).
+    // JPG não tem transparência e deixaria o fundo preto.
+    if (file.type === "image/png" || file.type === "image/webp") {
+      for (const q of [0.95, 0.9, 0.85, 0.8]) {
+        const blob = await encode("image/webp", q)
+        if (blob.type !== "image/webp") break // navegador sem WEBP (Safari antigo)
+        if (blob.size <= MAX_BYTES) return { blob, type: "image/webp" }
+      }
+      const png = await encode("image/png")
+      if (png.size <= MAX_BYTES) return { blob: png, type: "image/png" }
+    }
     let blob
     for (const q of [0.92, 0.88, 0.84, 0.8, 0.75]) {
-      blob = await new Promise((resolve, reject) =>
-        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("blob"))), "image/jpeg", q)
-      )
+      blob = await encode("image/jpeg", q)
       if (blob.size <= MAX_BYTES) break
     }
     return { blob, type: "image/jpeg" }
@@ -403,6 +642,7 @@
       } catch {
         throw new Error("Formato de imagem não suportado. Use JPG, PNG ou WEBP.")
       }
+      if (!img) return // desistiu do envio da foto pequena
       if (img.blob.size > 5 * 1024 * 1024) throw new Error("Imagem muito grande (máx. 5 MB).")
       const path = `${mode}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${EXT[img.type]}`
       const { error } = await sb.storage.from(BUCKET).upload(path, img.blob, {

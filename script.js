@@ -17,6 +17,14 @@ try {
 } catch {}
 if (savedMode === "dark") html.classList.remove("light")
 
+// Botão claro/escuro desativado no painel: o site fica no modo escolhido por ela
+// (não salva no localStorage, para a preferência do visitante voltar se ela reativar)
+function syncForcedMode() {
+  const f = ThemeKit.forcedMode(currentTheme)
+  if (f) html.classList.toggle("light", f === "light")
+}
+if (!isPreview) syncForcedMode()
+
 ThemeKit.apply(currentTheme, currentMode())
 
 if (isPreview) {
@@ -30,12 +38,20 @@ if (isPreview) {
     ThemeKit.apply(currentTheme, d.mode, d.bg)
   })
 } else {
+  // Primeira visita: esconde os textos padrão até chegar o conteúdo do painel (máx. 1,5 s)
+  const pending = !currentTheme
+  if (pending) html.classList.add("content-pending")
+  const reveal = () => html.classList.remove("content-pending")
+  if (pending) setTimeout(reveal, 1500)
   ThemeKit.fetchRemote().then((remote) => {
-    if (!remote) return
+    if (!remote) return reveal()
     const changed = JSON.stringify(remote) !== JSON.stringify(currentTheme)
     currentTheme = remote
     ThemeKit.saveCache(remote)
-    if (changed) ThemeKit.apply(currentTheme, currentMode())
+    const before = currentMode()
+    syncForcedMode()
+    if (changed || currentMode() !== before) ThemeKit.apply(currentTheme, currentMode())
+    reveal()
   })
 }
 

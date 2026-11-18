@@ -20,7 +20,7 @@
       <form id="login-form" class="card login-card">
         <img src="./assets/favicon.svg" alt="" class="logo" />
         <h1>Painel do site</h1>
-        <p class="muted">Entre para alterar cores e imagens de fundo.</p>
+        <p class="muted">Entre para alterar o visual, os textos e os links do site.</p>
         <label class="field">
           <span>E-mail</span>
           <input type="email" id="email" autocomplete="username" required />
@@ -58,6 +58,7 @@
             <h2>Imagem de fundo</h2>
             <p class="muted small">Toque nas fotos para escolher quais aparecem no site (✓ = aparece). Se tiver mais de uma marcada, o site sorteia uma a cada visita.</p>
             <div id="bg-list" class="bg-list"></div>
+            <p class="muted small">Para ficar nítido, envie a foto <strong>original</strong> da câmera ou da galeria (de preferência com 2000 pixels ou mais). Fotos baixadas do WhatsApp, do Instagram ou de stories vêm comprimidas e ficam borradas. Fotos marcadas com ⚠️ são pequenas demais.</p>
             <label class="btn secondary upload">
               <input type="file" id="bg-upload" accept="image/jpeg,image/png,image/webp" hidden />
               <span id="upload-label">+ Adicionar imagem</span>
@@ -77,8 +78,38 @@
             </label>
             <label class="check-row">
               <input type="checkbox" data-layout="showHandle" />
-              <span>Mostrar @taikobashi.sushi</span>
+              <span>Mostrar o nome abaixo do logo</span>
             </label>
+            <label class="field">
+              <span>Nome abaixo do logo</span>
+              <input type="text" id="handle-text" maxlength="60" placeholder="@taikobashi.sushi" />
+            </label>
+            <label class="field">
+              <span>Botão claro/escuro</span>
+              <select id="switch-pos"></select>
+            </label>
+          </div>
+
+          <div class="card">
+            <h2>Botões (textos e links)</h2>
+            <p class="muted small">Vale para os dois modos. Use as setas para mudar a ordem. Botão sem texto não aparece no site.</p>
+            <div id="links-list" class="edit-list"></div>
+            <button type="button" id="link-add" class="btn secondary">+ Adicionar botão</button>
+          </div>
+
+          <div class="card">
+            <h2>Ícones</h2>
+            <p class="muted small">Ícones redondos abaixo dos botões. Vale para os dois modos.</p>
+            <div id="social-list" class="edit-list"></div>
+            <button type="button" id="social-add" class="btn secondary">+ Adicionar ícone</button>
+            <button type="button" id="content-reset" class="btn ghost small">Restaurar textos, botões e ícones originais</button>
+          </div>
+
+          <div class="card">
+            <h2>Tamanhos</h2>
+            <p class="muted small">Vale para os dois modos.</p>
+            <div id="sizes"></div>
+            <button type="button" id="sizes-reset" class="btn ghost small">Restaurar tamanhos originais</button>
           </div>
 
           <div class="card">
@@ -105,7 +136,7 @@
           </div>
 
           <div class="card">
-            <h2>Botões</h2>
+            <h2>Cores dos botões</h2>
             <div class="field">
               <span>Cor de fundo dos botões</span>
               <div class="color-row">
@@ -128,7 +159,7 @@
           </div>
 
           <div class="card">
-            <h2>Textos</h2>
+            <h2>Cor dos textos</h2>
             <div class="field">
               <span>Cor dos textos (nome, ícones e rodapé)</span>
               <div class="color-row">

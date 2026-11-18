@@ -131,7 +131,9 @@ h2 {
 }
 input[type="email"],
 input[type="password"],
-input[type="text"] {
+input[type="text"],
+input[type="url"],
+select {
   font: inherit;
   padding: 11px 12px;
   border: 1px solid var(--border);
@@ -517,4 +519,81 @@ input[type="range"] {
   height: 20px;
   accent-color: var(--accent);
   cursor: pointer;
+}
+
+/* ===== Listas editáveis (botões e ícones) ===== */
+#sizes {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.edit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.edit-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.edit-fields {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.edit-fields input,
+.edit-fields select {
+  width: 100%;
+  min-width: 0;
+}
+.edit-fields input[type="url"] {
+  font-size: 13px;
+  color: var(--muted);
+}
+.edit-fields input.invalid {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.row-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+.icon-btn:hover:not(:disabled) {
+  background: var(--border);
+}
+.icon-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* Foto pequena na galeria */
+.bg-item .lowres-tag {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  font-size: 14px;
+  line-height: 1;
+  padding: 3px 4px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.6);
+  pointer-events: none;
 }
