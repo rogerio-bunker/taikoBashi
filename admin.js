@@ -111,7 +111,192 @@
     renderContrast()
     renderFit()
     $$("[data-layout]").forEach((el) => (el.checked = theme.layout[el.dataset.layout]))
+    renderContentEditor()
+    renderSizes()
   }
+
+  // ---------- Textos, botões e ícones (valem para os dois modos) ----------
+  function moveItem(arr, i, dir) {
+    const j = i + dir
+    if (j < 0 || j >= arr.length) return
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+    renderContentEditor()
+    changed()
+  }
+
+  function removeItem(arr, i, what) {
+    if (!confirm(`Remover este ${what}?`)) return
+    arr.splice(i, 1)
+    renderContentEditor()
+    changed()
+  }
+
+  function smallBtn(label, title, onClick, disabled) {
+    const b = document.createElement("button")
+    b.type = "button"
+    b.className = "icon-btn"
+    b.textContent = label
+    b.title = title
+    b.setAttribute("aria-label", title)
+    b.disabled = !!disabled
+    b.addEventListener("click", onClick)
+    return b
+  }
+
+  function textInput(value, placeholder, maxLength, onInput) {
+    const inp = document.createElement("input")
+    inp.type = "text"
+    inp.value = value
+    inp.placeholder = placeholder
+    inp.maxLength = maxLength
+    inp.addEventListener("input", () => {
+      onInput(inp.value)
+      changed()
+    })
+    return inp
+  }
+
+  function urlInput(item) {
+    const inp = textInput(item.url, "Link (ex.: https://...)", 2000, (v) => (item.url = v))
+    inp.type = "url"
+    inp.spellcheck = false
+    const check = () => {
+      const bad = item.url.trim() && !ThemeKit.cleanUrl(item.url)
+      inp.classList.toggle("invalid", !!bad)
+      inp.title = bad ? "Link inválido: comece com https://, mailto: ou tel:" : ""
+    }
+    inp.addEventListener("input", check)
+    check()
+    return inp
+  }
+
+  function rowControls(arr, i, what) {
+    const box = document.createElement("div")
+    box.className = "row-controls"
+    box.append(
+      smallBtn("↑", "Mover para cima", () => moveItem(arr, i, -1), i === 0),
+      smallBtn("↓", "Mover para baixo", () => moveItem(arr, i, 1), i === arr.length - 1),
+      smallBtn("×", `Remover ${what}`, () => removeItem(arr, i, what))
+    )
+    return box
+  }
+
+  function renderContentEditor() {
+    const c = theme.content
+    $("#handle-text").value = c.handle
+
+    const links = $("#links-list")
+    links.innerHTML = ""
+    c.links.forEach((l, i) => {
+      const row = document.createElement("div")
+      row.className = "edit-row"
+      const fields = document.createElement("div")
+      fields.className = "edit-fields"
+      fields.append(textInput(l.text, "Texto do botão", 80, (v) => (l.text = v)), urlInput(l))
+      row.append(fields, rowControls(c.links, i, "botão"))
+      links.appendChild(row)
+    })
+    if (!c.links.length) links.innerHTML = '<p class="muted small">Nenhum botão.</p>'
+
+    const social = $("#social-list")
+    social.innerHTML = ""
+    c.social.forEach((s, i) => {
+      const row = document.createElement("div")
+      row.className = "edit-row"
+      const fields = document.createElement("div")
+      fields.className = "edit-fields"
+      const sel = document.createElement("select")
+      sel.setAttribute("aria-label", "Ícone")
+      for (const [name, label] of Object.entries(ThemeKit.SOCIAL_ICONS)) {
+        const o = document.createElement("option")
+        o.value = name
+        o.textContent = label
+        sel.appendChild(o)
+      }
+      sel.value = s.icon
+      sel.addEventListener("change", () => {
+        s.icon = sel.value
+        changed()
+      })
+      fields.append(sel, urlInput(s))
+      row.append(fields, rowControls(c.social, i, "ícone"))
+      social.appendChild(row)
+    })
+    if (!c.social.length) social.innerHTML = '<p class="muted small">Nenhum ícone.</p>'
+  }
+
+  $("#handle-text").addEventListener("input", (e) => {
+    theme.content.handle = e.target.value
+    changed()
+  })
+
+  $("#link-add").addEventListener("click", () => {
+    theme.content.links.push({ text: "Novo botão", url: "" })
+    renderContentEditor()
+    changed()
+    const rows = $$("#links-list .edit-row input")
+    if (rows.length) rows[rows.length - 2].select()
+  })
+
+  $("#social-add").addEventListener("click", () => {
+    theme.content.social.push({ icon: "globe-outline", url: "" })
+    renderContentEditor()
+    changed()
+  })
+
+  $("#content-reset").addEventListener("click", () => {
+    if (!confirm("Voltar o nome, os botões e os ícones para os originais?")) return
+    theme.content = JSON.parse(JSON.stringify(ThemeKit.DEFAULT_CONTENT))
+    renderContentEditor()
+    changed()
+  })
+
+  // ---------- Tamanhos ----------
+  const SIZE_LABELS = {
+    width: "Largura da área dos botões",
+    buttonPad: "Altura dos botões",
+    buttonFont: "Tamanho da letra dos botões",
+    buttonRadius: "Arredondamento dos cantos",
+    buttonGap: "Espaço entre os botões",
+    logo: "Tamanho do logo",
+    handle: "Tamanho do nome abaixo do logo",
+    icons: "Tamanho dos ícones",
+  }
+
+  const sizesBox = $("#sizes")
+  for (const [key, [, min, max]] of Object.entries(ThemeKit.SIZES)) {
+    const label = document.createElement("label")
+    label.className = "field"
+    const span = document.createElement("span")
+    span.textContent = SIZE_LABELS[key] + " "
+    const out = document.createElement("output")
+    out.dataset.sizeOut = key
+    span.appendChild(out)
+    const range = document.createElement("input")
+    range.type = "range"
+    range.min = min
+    range.max = max
+    range.step = 1
+    range.dataset.size = key
+    range.addEventListener("input", () => {
+      theme.sizes[key] = Number(range.value)
+      out.textContent = range.value + "px"
+      changed()
+    })
+    label.append(span, range)
+    sizesBox.appendChild(label)
+  }
+
+  function renderSizes() {
+    $$("[data-size]").forEach((el) => (el.value = theme.sizes[el.dataset.size]))
+    $$("[data-size-out]").forEach((el) => (el.textContent = theme.sizes[el.dataset.sizeOut] + "px"))
+  }
+
+  $("#sizes-reset").addEventListener("click", () => {
+    theme.sizes = { ...ThemeKit.DEFAULT_SIZES }
+    renderSizes()
+    changed()
+  })
 
   // ---------- Enquadramento ----------
   function currentEditBg() {

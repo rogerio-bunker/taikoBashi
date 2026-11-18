@@ -30,12 +30,18 @@ if (isPreview) {
     ThemeKit.apply(currentTheme, d.mode, d.bg)
   })
 } else {
+  // Primeira visita: esconde os textos padrão até chegar o conteúdo do painel (máx. 1,5 s)
+  const pending = !currentTheme
+  if (pending) html.classList.add("content-pending")
+  const reveal = () => html.classList.remove("content-pending")
+  if (pending) setTimeout(reveal, 1500)
   ThemeKit.fetchRemote().then((remote) => {
-    if (!remote) return
+    if (!remote) return reveal()
     const changed = JSON.stringify(remote) !== JSON.stringify(currentTheme)
     currentTheme = remote
     ThemeKit.saveCache(remote)
     if (changed) ThemeKit.apply(currentTheme, currentMode())
+    reveal()
   })
 }
 

@@ -1,4 +1,4 @@
-// Tema personalizável do site (cores e imagens de fundo).
+// Tema personalizável do site (cores, fundos, textos, links e tamanhos).
 // Os valores vêm do Supabase (tabela site_theme) e caem nestes padrões se faltar algo.
 ;(function () {
   const DEFAULT_THEME = {
@@ -21,6 +21,57 @@
       buttonText: "#f0ebe4",
     },
   }
+
+  // Textos e links (valem para os dois modos)
+  const WHATSAPP =
+    "https://api.whatsapp.com/send?phone=5551981900250&text=Ol%C3%A1%2C%20Gostaria%20de%20fazer%20meu%20pedido!"
+  const DEFAULT_CONTENT = {
+    handle: "@taikobashi.sushi",
+    links: [
+      { text: "Siga Taiko Bashi no instagram", url: "https://www.instagram.com/taikobashi.sushi" },
+      { text: "Faça seu pedido no Site", url: "https://taikobashi.com.br/" },
+      { text: "WhatsApp", url: WHATSAPP },
+      {
+        text: "Nosso link no ifood",
+        url: "https://www.ifood.com.br/delivery/porto-alegre-rs/taiko-bashi-sushi-poa-partenon/5557c01e-b323-4834-878c-9fd804023efc?utm_medium=share",
+      },
+    ],
+    social: [
+      { icon: "logo-instagram", url: "https://www.instagram.com/taikobashi.sushi" },
+      { icon: "reader-outline", url: "https://taikobashi.com.br/" },
+      { icon: "logo-whatsapp", url: WHATSAPP },
+      { icon: "location-outline", url: "https://share.google/dYJksb6suRZLrI8tU" },
+    ],
+  }
+
+  // Ícones que a admin pode escolher (nome do Ionicons → rótulo)
+  const SOCIAL_ICONS = {
+    "logo-instagram": "Instagram",
+    "logo-whatsapp": "WhatsApp",
+    "logo-facebook": "Facebook",
+    "logo-tiktok": "TikTok",
+    "logo-youtube": "YouTube",
+    "reader-outline": "Cardápio",
+    "location-outline": "Localização",
+    "call-outline": "Telefone",
+    "mail-outline": "E-mail",
+    "globe-outline": "Site",
+    "bicycle-outline": "Delivery",
+    "star-outline": "Avaliações",
+  }
+
+  // Tamanhos em px: [padrão, mínimo, máximo]
+  const SIZES = {
+    width: [420, 300, 640],
+    buttonPad: [16, 6, 36],
+    buttonFont: [16, 12, 26],
+    buttonRadius: [8, 0, 40],
+    buttonGap: [16, 4, 40],
+    logo: [136, 48, 240],
+    handle: [16, 12, 28],
+    icons: [24, 16, 40],
+  }
+  const DEFAULT_SIZES = Object.fromEntries(Object.entries(SIZES).map(([k, v]) => [k, v[0]]))
 
   const CACHE_KEY = "site-theme-v1"
   const lastBg = {}
@@ -48,6 +99,19 @@
 
   function isHex(v) {
     return typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v)
+  }
+
+  function cleanText(v, max) {
+    return typeof v === "string" ? v.slice(0, max) : ""
+  }
+
+  // Só aceita links http(s), e-mail e telefone; "site.com" vira "https://site.com"
+  function cleanUrl(v) {
+    const u = typeof v === "string" ? v.trim() : ""
+    if (!u) return ""
+    if (/^(https?:\/\/|mailto:|tel:)/i.test(u)) return u
+    if (/^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(u)) return "https://" + u
+    return ""
   }
 
   // Completa o tema com os padrões e descarta valores inválidos
@@ -82,6 +146,30 @@
     out.layout = {
       showLogo: lay.showLogo !== false,
       showHandle: lay.showHandle !== false,
+    }
+    // Textos e links (valem para os dois modos)
+    const con = (theme && theme.content) || {}
+    out.content = {
+      handle: typeof con.handle === "string" ? con.handle.slice(0, 60) : DEFAULT_CONTENT.handle,
+      links: Array.isArray(con.links)
+        ? con.links
+            .filter((l) => l && typeof l === "object")
+            .map((l) => ({ text: cleanText(l.text, 80), url: cleanText(l.url, 2000) }))
+        : DEFAULT_CONTENT.links.map((l) => ({ ...l })),
+      social: Array.isArray(con.social)
+        ? con.social
+            .filter((l) => l && typeof l === "object")
+            .map((l) => ({
+              icon: SOCIAL_ICONS[l.icon] ? l.icon : "globe-outline",
+              url: cleanText(l.url, 2000),
+            }))
+        : DEFAULT_CONTENT.social.map((l) => ({ ...l })),
+    }
+    // Tamanhos (valem para os dois modos)
+    const siz = (theme && theme.sizes) || {}
+    out.sizes = {}
+    for (const [k, [def, min, max]] of Object.entries(SIZES)) {
+      out.sizes[k] = siz[k] == null ? def : clamp(siz[k], min, max)
     }
     return out
   }
@@ -126,6 +214,63 @@
     return el
   }
 
+  function setLink(a, url) {
+    const u = cleanUrl(url)
+    if (u) {
+      a.href = u
+      a.target = "_blank"
+      a.rel = "noopener"
+    } else {
+      a.removeAttribute("href")
+    }
+  }
+
+  // Reaproveita os elementos que já existem (assim a animação de entrada não repete)
+  function syncChildren(parent, items, make, update) {
+    while (parent.children.length > items.length) parent.lastElementChild.remove()
+    items.forEach((item, i) => {
+      const el = parent.children[i] || parent.appendChild(make())
+      update(el, item, i)
+    })
+    parent.style.display = items.length ? "" : "none"
+  }
+
+  function renderContent(c) {
+    const handle = document.querySelector("#profile p")
+    if (handle) handle.textContent = c.handle
+    document.documentElement.classList.toggle("empty-handle", !c.handle.trim())
+
+    const ul = document.querySelector("#container > ul")
+    if (ul) {
+      syncChildren(
+        ul,
+        c.links.filter((l) => l.text.trim()),
+        () => document.createElement("li"),
+        (li, l, i) => {
+          const a = li.querySelector("a") || li.appendChild(document.createElement("a"))
+          if (a.textContent !== l.text) a.textContent = l.text
+          setLink(a, l.url)
+          li.style.animationDelay = 0.2 + i * 0.1 + "s"
+        }
+      )
+    }
+
+    const social = document.getElementById("social-links")
+    if (social) {
+      syncChildren(
+        social,
+        c.social,
+        () => document.createElement("a"),
+        (a, l) => {
+          const icon = a.querySelector("ion-icon") || a.appendChild(document.createElement("ion-icon"))
+          if (icon.getAttribute("name") !== l.icon) icon.setAttribute("name", l.icon)
+          a.setAttribute("aria-label", SOCIAL_ICONS[l.icon])
+          setLink(a, l.url)
+        }
+      )
+    }
+  }
+
   // forcedBg: usado pela prévia do painel para mostrar a foto em ajuste
   function apply(theme, mode, forcedBg) {
     const full = merge(theme)
@@ -134,6 +279,8 @@
     cl.toggle("hide-logo", !full.layout.showLogo)
     cl.toggle("hide-handle", !full.layout.showHandle)
     const s = document.documentElement.style
+    for (const [k, v] of Object.entries(full.sizes)) s.setProperty(`--size-${k}`, v + "px")
+    renderContent(full.content)
     const op = t.buttonBgOpacity
 
     s.setProperty("--text-color", t.text)
@@ -196,6 +343,11 @@
 
   window.ThemeKit = {
     DEFAULT_THEME,
+    DEFAULT_CONTENT,
+    DEFAULT_SIZES,
+    SIZES,
+    SOCIAL_ICONS,
+    cleanUrl,
     merge,
     getFit,
     apply,
